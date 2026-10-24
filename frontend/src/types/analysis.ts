@@ -46,3 +46,21 @@ export interface AnalyzeErrorResponse {
   success: false;
   error: string;
 }
+
+export interface ExplanationInput {
+  language: AnalysisLanguage;
+  filename?: string;
+  sourceContext: string;
+  finding: Finding;
+}
+
+export interface FindingExplanation {
+  explanation: string;
+  suggestedFix: string;
+  caveats: string;
+}
+
+export interface ExplainSuccessResponse {
+  success: true;
+  explanation: FindingExplanation;
+}
