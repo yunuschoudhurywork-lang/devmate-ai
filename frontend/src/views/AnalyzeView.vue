@@ -43,7 +43,7 @@ async function runAnalysis(): Promise<void> {
     </section>
     <aside class="results-panel">
       <template v-if="analysis"><QualityScore :quality="analysis.quality" /><AnalysisSummary :summary="analysis.summary" /></template>
-      <FindingsList :findings="analysis?.findings ?? []" :analyzed="Boolean(analysis)" />
+      <FindingsList :findings="analysis?.findings ?? []" :analyzed="Boolean(analysis)" :language="language" :filename="filename" :source-context="code" />
     </aside>
   </main>
 </template>

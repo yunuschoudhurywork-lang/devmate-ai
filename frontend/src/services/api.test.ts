@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { analyzeCode, ApiError } from "./api";
+import { analyzeCode, ApiError, explainFinding } from "./api";
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -24,5 +24,13 @@ describe("analyzeCode", () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
 
     await expect(analyzeCode({ language: "javascript", code: "code" })).rejects.toThrow("Unable to reach the DevMate backend");
+  });
+
+  it("sends an explanation request to the backend", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true, explanation: { explanation: "Why", suggestedFix: "Fix", caveats: "Check context" } }), { status: 200 })));
+
+    const response = await explainFinding({ language: "javascript", sourceContext: "x", finding: { type: "error", severity: "high", line: 1, message: "Missing", ruleId: "no-undef" } });
+
+    expect(response.explanation.suggestedFix).toBe("Fix");
   });
 });

@@ -62,4 +62,15 @@ Every analysis starts each category at 100, subtracts deductions for findings in
 
 Critical correctness or performance findings are not emitted in Phase 1. If added later, they receive that category's strongest listed deduction.
 
-Not included yet: frontend, database, GitHub integration, LLM features, authentication, or AI-generated reviews.
+## Hosted AI explanations
+
+DevMate can optionally explain one existing finding at a time through `POST /api/explain`. The browser never receives the Gemini API key. Copy `.env.example` to `.env` and configure the backend before starting it; the backend loads this local file at startup:
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.5-flash-lite
+```
+
+`gemini-3.5-flash-lite` is the default stable, low-cost model. The endpoint accepts a JavaScript or TypeScript code context plus one validated existing finding, requests JSON from Gemini, then validates the returned explanation, potential fix, and caveats before responding. It does not execute, apply, or verify suggested fixes.
+
+Not included yet: database, GitHub integration, authentication, PR reviews, or autonomous code changes.

@@ -16,6 +16,19 @@ export interface Finding {
   suggestion?: string;
 }
 
+export interface ExplanationInput {
+  language: string;
+  filename?: string;
+  sourceContext: string;
+  finding: Finding;
+}
+
+export interface FindingExplanation {
+  explanation: string;
+  suggestedFix: string;
+  caveats: string;
+}
+
 export interface QualityScore {
   overall: number;
   categories: {
