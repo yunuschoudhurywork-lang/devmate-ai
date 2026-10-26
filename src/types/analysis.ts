@@ -50,3 +50,16 @@ export interface AnalysisResult {
   };
   quality: QualityScore;
 }
+
+export interface ReviewSummaryInput {
+  language: string;
+  filename?: string;
+  analysisResult: AnalysisResult;
+}
+
+export interface ReviewSummary {
+  summary: string;
+  keyRisks: string[];
+  priorities: string[];
+  caveats: string;
+}

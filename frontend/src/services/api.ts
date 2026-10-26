@@ -1,4 +1,4 @@
-import type { AnalysisInput, AnalyzeErrorResponse, AnalyzeSuccessResponse, ExplainSuccessResponse, ExplanationInput } from "@/types/analysis";
+import type { AnalysisInput, AnalyzeErrorResponse, AnalyzeSuccessResponse, ExplainSuccessResponse, ExplanationInput, ReviewSummaryInput, ReviewSummarySuccessResponse } from "@/types/analysis";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:3000";
 
@@ -12,7 +12,11 @@ export async function explainFinding(input: ExplanationInput): Promise<ExplainSu
   return postJson<ExplainSuccessResponse>("/api/explain", input, isExplainSuccessResponse, "The explanation request failed.");
 }
 
-async function postJson<T>(path: string, input: AnalysisInput | ExplanationInput, isSuccess: (payload: unknown) => payload is T, fallbackError: string): Promise<T> {
+export async function generateReviewSummary(input: ReviewSummaryInput): Promise<ReviewSummarySuccessResponse> {
+  return postJson<ReviewSummarySuccessResponse>("/api/review-summary", input, isReviewSummarySuccessResponse, "The review summary request failed.");
+}
+
+async function postJson<T>(path: string, input: AnalysisInput | ExplanationInput | ReviewSummaryInput, isSuccess: (payload: unknown) => payload is T, fallbackError: string): Promise<T> {
   let response: Response;
 
   try {
@@ -40,6 +44,10 @@ function isSuccessResponse(payload: unknown): payload is AnalyzeSuccessResponse 
 
 function isExplainSuccessResponse(payload: unknown): payload is ExplainSuccessResponse {
   return typeof payload === "object" && payload !== null && "success" in payload && payload.success === true && "explanation" in payload;
+}
+
+function isReviewSummarySuccessResponse(payload: unknown): payload is ReviewSummarySuccessResponse {
+  return typeof payload === "object" && payload !== null && "success" in payload && payload.success === true && "summary" in payload;
 }
 
 function isErrorResponse(payload: unknown): payload is AnalyzeErrorResponse {
