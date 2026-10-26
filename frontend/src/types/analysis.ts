@@ -64,3 +64,21 @@ export interface ExplainSuccessResponse {
   success: true;
   explanation: FindingExplanation;
 }
+
+export interface ReviewSummaryInput {
+  language: AnalysisLanguage;
+  filename?: string;
+  analysisResult: AnalysisResult;
+}
+
+export interface ReviewSummary {
+  summary: string;
+  keyRisks: string[];
+  priorities: string[];
+  caveats: string;
+}
+
+export interface ReviewSummarySuccessResponse {
+  success: true;
+  summary: ReviewSummary;
+}
