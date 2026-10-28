@@ -12,6 +12,7 @@ const language = ref<AnalysisLanguage>("javascript");
 const filename = ref("example.js");
 const code = ref("const message = 'Hello, DevMate';\nconsole.log(message);");
 const analysis = ref<AnalysisResult>();
+const reportId = ref<string>();
 const reviewSummary = ref<ReviewSummaryType>();
 const loading = ref(false);
 const summaryLoading = ref(false);
@@ -25,8 +26,11 @@ async function runAnalysis(): Promise<void> {
   error.value = "";
   reviewSummary.value = undefined;
   summaryError.value = "";
+  reportId.value = undefined;
   try {
-    analysis.value = (await analyzeCode({ language: language.value, filename: filename.value || undefined, code: code.value })).analysis;
+    const result = await analyzeCode({ language: language.value, filename: filename.value || undefined, code: code.value });
+    analysis.value = result.analysis;
+    reportId.value = result.reportId;
   } catch (caught) {
     analysis.value = undefined;
     error.value = caught instanceof ApiError ? caught.message : "An unexpected error occurred while requesting analysis.";
@@ -43,7 +47,8 @@ async function requestReviewSummary(): Promise<void> {
     reviewSummary.value = (await generateReviewSummary({
       language: language.value,
       filename: filename.value || undefined,
-      analysisResult: analysis.value
+      analysisResult: analysis.value,
+      reportId: reportId.value
     })).summary;
   } catch (caught) {
     summaryError.value = caught instanceof ApiError ? caught.message : "An unexpected error occurred while requesting a review summary.";
@@ -80,7 +85,7 @@ async function requestReviewSummary(): Promise<void> {
         </div>
         <ReviewSummary v-if="reviewSummary" :summary="reviewSummary" />
       </template>
-      <FindingsList :findings="analysis?.findings ?? []" :analyzed="Boolean(analysis)" :language="language" :filename="filename" :source-context="code" />
+      <FindingsList :findings="analysis?.findings ?? []" :analyzed="Boolean(analysis)" :language="language" :filename="filename" :source-context="code" :report-id="reportId" />
     </aside>
   </main>
 </template>

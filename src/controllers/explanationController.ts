@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { ExplanationNotConfiguredError, ExplanationProviderError, ExplanationService, InvalidExplanationError } from "../services/explanationService";
+import { saveExplanation } from "../db/reportRepository";
 import type { ExplanationInput, Finding, FindingType, Severity } from "../types/analysis";
 
 const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
@@ -11,6 +12,10 @@ const MAX_FINDING_MESSAGE_LENGTH = 2_000;
 const MAX_RULE_ID_LENGTH = 200;
 const MAX_SUGGESTION_LENGTH = 2_000;
 
+interface ExplanationRequestBody extends ExplanationInput {
+  reportId?: string;
+}
+
 export function createExplainController(explanationService: ExplanationService) {
   return async (request: Request, response: Response): Promise<void> => {
     const input = validateInput(request.body);
@@ -21,6 +26,18 @@ export function createExplainController(explanationService: ExplanationService) 
 
     try {
       const explanation = await explanationService.explain(input);
+
+      // Persist explanation if reportId is provided
+      const body = request.body as ExplanationRequestBody;
+      if (body.reportId && typeof body.reportId === "string") {
+        try {
+          await saveExplanation(body.reportId, input.finding, explanation);
+        } catch (error) {
+          console.error("Failed to persist explanation:", error);
+          // Don't fail the request if persistence fails
+        }
+      }
+
       response.status(200).json({ success: true, explanation });
     } catch (error) {
       if (error instanceof ExplanationNotConfiguredError) {

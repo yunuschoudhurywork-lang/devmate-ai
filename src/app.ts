@@ -1,5 +1,6 @@
 import express from "express";
 import { analysisRouter } from "./routes/analysisRoutes";
+import { reportsRouter } from "./routes/reportsRoutes";
 
 export const app = express();
 
@@ -21,6 +22,7 @@ app.get("/health", (_request, response) => {
 });
 
 app.use("/api", analysisRouter);
+app.use("/api/reports", reportsRouter);
 
 app.use((_request, response) => {
   response.status(404).json({ success: false, error: "Route not found." });
