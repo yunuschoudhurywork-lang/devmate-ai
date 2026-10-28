@@ -3,7 +3,7 @@ import { computed, reactive } from "vue";
 import { ApiError, explainFinding } from "@/services/api";
 import type { AnalysisLanguage, Finding, FindingExplanation, FindingType } from "@/types/analysis";
 
-const props = defineProps<{ findings: Finding[]; analyzed: boolean; language?: AnalysisLanguage; filename?: string; sourceContext?: string }>();
+const props = defineProps<{ findings: Finding[]; analyzed: boolean; language?: AnalysisLanguage; filename?: string; sourceContext?: string; reportId?: string }>();
 const groups: Array<{ type: FindingType; title: string }> = [
   { type: "error", title: "🐞 Errors" },
   { type: "security", title: "🛡 Security" },
@@ -21,7 +21,13 @@ async function requestExplanation(finding: Finding): Promise<void> {
   pending.add(key);
   explanationErrors[key] = undefined;
   try {
-    explanations[key] = (await explainFinding({ language: props.language, filename: props.filename, sourceContext: props.sourceContext, finding })).explanation;
+    explanations[key] = (await explainFinding({
+      language: props.language,
+      filename: props.filename,
+      sourceContext: props.sourceContext,
+      finding,
+      reportId: props.reportId
+    })).explanation;
   } catch (error) {
     explanationErrors[key] = error instanceof ApiError ? error.message : "Unable to request an AI explanation.";
   } finally {

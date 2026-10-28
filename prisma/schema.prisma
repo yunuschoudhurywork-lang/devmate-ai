@@ -1,0 +1,83 @@
+// Database schema for DevMate AI analysis reports and history
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  language  String
+  filename  String?
+  createdAt DateTime @default(now())
+
+  // Summary counts
+  totalFindings    Int
+  errorCount       Int
+  warningCount     Int
+  securityCount    Int
+  performanceCount Int
+
+  // Quality scores
+  overallScore     Int
+  correctnessScore Int
+  securityScore    Int
+  performanceScore Int
+
+  // Relations
+  findings      Finding[]
+  reviewSummary ReviewSummary?
+  explanations  Explanation[]
+
+  @@index([createdAt])
+}
+
+model Finding {
+  id         String  @id @default(uuid())
+  reportId   String
+  report     Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  type       String  // "error" | "security" | "performance"
+  severity   String  // "low" | "medium" | "high" | "critical"
+  line       Int
+  message    String
+  ruleId     String
+  suggestion String?
+
+  explanations Explanation[]
+
+  @@index([reportId])
+}
+
+model ReviewSummary {
+  id         String   @id @default(uuid())
+  reportId   String   @unique
+  report     Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  summary    String
+  keyRisks   String[]
+  priorities String[]
+  caveats    String
+  createdAt  DateTime @default(now())
+}
+
+model Explanation {
+  id           String   @id @default(uuid())
+  reportId     String
+  report       Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  findingId    String
+  finding      Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+
+  explanation  String
+  suggestedFix String
+  caveats      String
+  createdAt    DateTime @default(now())
+
+  @@index([reportId])
+  @@index([findingId])
+  @@unique([reportId, findingId])
+}

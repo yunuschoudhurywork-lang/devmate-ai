@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { AnalysisService } from "../services/analysisService";
+import { saveAnalysisReport } from "../db/reportRepository";
 import type { AnalysisInput } from "../types/analysis";
 
 const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
@@ -28,5 +29,15 @@ export async function analyzeCode(request: Request, response: Response): Promise
   }
 
   const analysis = await analysisService.analyze({ code: body.code, language, filename: body.filename });
-  response.status(200).json({ success: true, analysis });
+
+  // Persist the analysis report
+  let reportId: string | undefined;
+  try {
+    reportId = await saveAnalysisReport({ language, filename: body.filename }, analysis);
+  } catch (error) {
+    // Log but don't fail the request if persistence fails
+    console.error("Failed to persist analysis report:", error);
+  }
+
+  response.status(200).json({ success: true, analysis, reportId });
 }

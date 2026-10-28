@@ -40,6 +40,7 @@ export interface AnalysisResult {
 export interface AnalyzeSuccessResponse {
   success: true;
   analysis: AnalysisResult;
+  reportId?: string;
 }
 
 export interface AnalyzeErrorResponse {
@@ -52,6 +53,7 @@ export interface ExplanationInput {
   filename?: string;
   sourceContext: string;
   finding: Finding;
+  reportId?: string;
 }
 
 export interface FindingExplanation {
@@ -69,6 +71,7 @@ export interface ReviewSummaryInput {
   language: AnalysisLanguage;
   filename?: string;
   analysisResult: AnalysisResult;
+  reportId?: string;
 }
 
 export interface ReviewSummary {
@@ -81,4 +84,40 @@ export interface ReviewSummary {
 export interface ReviewSummarySuccessResponse {
   success: true;
   summary: ReviewSummary;
+}
+
+export interface ReportListItem {
+  id: string;
+  language: string;
+  filename: string | null;
+  createdAt: string;
+  totalFindings: number;
+  overallScore: number;
+  hasReviewSummary: boolean;
+}
+
+export interface ReportsListSuccessResponse {
+  success: true;
+  reports: ReportListItem[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface SavedReport {
+  id: string;
+  language: string;
+  filename: string | null;
+  createdAt: string;
+  analysis: AnalysisResult;
+  reviewSummary: ReviewSummary | null;
+  explanations: Record<string, FindingExplanation>;
+}
+
+export interface ReportSuccessResponse {
+  success: true;
+  report: SavedReport;
 }

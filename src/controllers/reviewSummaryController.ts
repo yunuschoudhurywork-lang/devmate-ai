@@ -1,12 +1,17 @@
 import type { Request, Response } from "express";
 import { ExplanationNotConfiguredError, ExplanationProviderError } from "../services/explanationService";
 import { ReviewSummaryService, InvalidSummaryError } from "../services/reviewSummaryService";
+import { saveReviewSummary } from "../db/reportRepository";
 import type { ReviewSummaryInput, AnalysisResult } from "../types/analysis";
 
 const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
 const MAX_FILENAME_LENGTH = 255;
 const MAX_FINDINGS_COUNT = 200;
 const MAX_FINDING_MESSAGE_LENGTH = 2_000;
+
+interface ReviewSummaryRequestBody extends ReviewSummaryInput {
+  reportId?: string;
+}
 
 export function createReviewSummaryController(summaryService: ReviewSummaryService) {
   return async (request: Request, response: Response): Promise<void> => {
@@ -18,6 +23,18 @@ export function createReviewSummaryController(summaryService: ReviewSummaryServi
 
     try {
       const summary = await summaryService.generateSummary(input);
+
+      // Persist summary if reportId is provided
+      const body = request.body as ReviewSummaryRequestBody;
+      if (body.reportId && typeof body.reportId === "string") {
+        try {
+          await saveReviewSummary(body.reportId, summary);
+        } catch (error) {
+          console.error("Failed to persist review summary:", error);
+          // Don't fail the request if persistence fails
+        }
+      }
+
       response.status(200).json({ success: true, summary });
     } catch (error) {
       if (error instanceof ExplanationNotConfiguredError) {
