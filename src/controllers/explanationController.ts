@@ -27,11 +27,12 @@ export function createExplainController(explanationService: ExplanationService) 
     try {
       const explanation = await explanationService.explain(input);
 
-      // Persist explanation if reportId is provided
+      // Persist explanation if reportId is provided (with ownership validation)
       const body = request.body as ExplanationRequestBody;
       if (body.reportId && typeof body.reportId === "string") {
         try {
-          await saveExplanation(body.reportId, input.finding, explanation);
+          const userId = request.user?.id;
+          await saveExplanation(body.reportId, input.finding, explanation, userId);
         } catch (error) {
           console.error("Failed to persist explanation:", error);
           // Don't fail the request if persistence fails

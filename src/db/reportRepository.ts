@@ -35,13 +35,14 @@ export interface ReportListItem {
 
 /** Save a complete analysis report with all findings */
 export async function saveAnalysisReport(
-  input: { language: string; filename?: string },
+  input: { language: string; filename?: string; userId?: string },
   result: AnalysisResult
 ): Promise<string> {
   const report = await prisma.report.create({
     data: {
       language: input.language,
       filename: input.filename || null,
+      userId: input.userId || null,
       totalFindings: result.summary.total,
       errorCount: result.summary.errors,
       warningCount: result.summary.warnings,
@@ -67,12 +68,19 @@ export async function saveAnalysisReport(
   return report.id;
 }
 
-/** Get paginated list of reports */
-export async function getReportsList(page = 1, pageSize = 20): Promise<{ reports: ReportListItem[]; total: number }> {
+/** Get paginated list of reports for a specific user */
+export async function getReportsList(
+  page = 1,
+  pageSize = 20,
+  userId?: string
+): Promise<{ reports: ReportListItem[]; total: number }> {
   const skip = (page - 1) * pageSize;
+
+  const where = userId ? { userId } : { userId: null };
 
   const [reports, total] = await Promise.all([
     prisma.report.findMany({
+      where,
       skip,
       take: pageSize,
       orderBy: { createdAt: "desc" },
@@ -86,7 +94,7 @@ export async function getReportsList(page = 1, pageSize = 20): Promise<{ reports
         reviewSummary: { select: { id: true } },
       },
     }),
-    prisma.report.count(),
+    prisma.report.count({ where }),
   ]);
 
   return {
@@ -103,10 +111,12 @@ export async function getReportsList(page = 1, pageSize = 20): Promise<{ reports
   };
 }
 
-/** Get a complete report by ID */
-export async function getReportById(reportId: string): Promise<FullReport | null> {
-  const report = await prisma.report.findUnique({
-    where: { id: reportId },
+/** Get a complete report by ID with ownership validation */
+export async function getReportById(reportId: string, userId?: string): Promise<FullReport | null> {
+  const where = userId ? { id: reportId, userId } : { id: reportId, userId: null };
+
+  const report = await prisma.report.findFirst({
+    where,
     include: {
       findings: true,
       reviewSummary: true,
@@ -169,11 +179,13 @@ export async function getReportById(reportId: string): Promise<FullReport | null
   };
 }
 
-/** Delete a report and all associated data */
-export async function deleteReport(reportId: string): Promise<boolean> {
+/** Delete a report with ownership validation */
+export async function deleteReport(reportId: string, userId?: string): Promise<boolean> {
   try {
+    const where = userId ? { id: reportId, userId } : { id: reportId, userId: null };
+
     await prisma.report.delete({
-      where: { id: reportId },
+      where,
     });
     return true;
   } catch {
@@ -181,8 +193,18 @@ export async function deleteReport(reportId: string): Promise<boolean> {
   }
 }
 
-/** Save or update a review summary for a report */
-export async function saveReviewSummary(reportId: string, summary: ReviewSummary): Promise<void> {
+/** Save or update a review summary for a report with ownership validation */
+export async function saveReviewSummary(reportId: string, summary: ReviewSummary, userId?: string): Promise<void> {
+  // Verify ownership
+  if (userId) {
+    const report = await prisma.report.findFirst({
+      where: { id: reportId, userId },
+    });
+    if (!report) {
+      throw new Error("Report not found or access denied");
+    }
+  }
+
   await prisma.reviewSummary.upsert({
     where: { reportId },
     update: {
@@ -201,12 +223,23 @@ export async function saveReviewSummary(reportId: string, summary: ReviewSummary
   });
 }
 
-/** Save an explanation for a specific finding */
+/** Save an explanation for a specific finding with ownership validation */
 export async function saveExplanation(
   reportId: string,
   finding: Finding,
-  explanation: FindingExplanation
+  explanation: FindingExplanation,
+  userId?: string
 ): Promise<void> {
+  // Verify ownership
+  if (userId) {
+    const report = await prisma.report.findFirst({
+      where: { id: reportId, userId },
+    });
+    if (!report) {
+      throw new Error("Report not found or access denied");
+    }
+  }
+
   // Find the persisted finding that matches this finding's characteristics
   const persistedFinding = await prisma.finding.findFirst({
     where: {

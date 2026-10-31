@@ -23,7 +23,10 @@ export async function listReports(request: Request, response: Response): Promise
   }
 
   try {
-    const { reports, total } = await getReportsList(page, pageSize);
+    // Get only the authenticated user's reports
+    const userId = request.user?.id;
+    const { reports, total } = await getReportsList(page, pageSize, userId);
+    
     response.status(200).json({
       success: true,
       reports,
@@ -50,7 +53,9 @@ export async function getReport(request: Request, response: Response): Promise<v
   }
 
   try {
-    const report = await getReportById(reportId);
+    // Get report with ownership validation
+    const userId = request.user?.id;
+    const report = await getReportById(reportId, userId);
 
     if (!report) {
       response.status(404).json({ success: false, error: "Report not found." });
@@ -106,7 +111,9 @@ export async function removeReport(request: Request, response: Response): Promis
   }
 
   try {
-    const deleted = await deleteReport(reportId);
+    // Delete with ownership validation
+    const userId = request.user?.id;
+    const deleted = await deleteReport(reportId, userId);
 
     if (!deleted) {
       response.status(404).json({ success: false, error: "Report not found." });
