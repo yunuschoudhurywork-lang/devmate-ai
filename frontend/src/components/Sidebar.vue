@@ -37,7 +37,7 @@ const handleSignIn = () => {
   user.value = {
     name: signInForm.value.email.split('@')[0],
     email: signInForm.value.email,
-    avatar: `https://ui-avatars.com/api/?name=${signInForm.value.email.split('@')[0]}&background=0284c7&color=fff`
+    avatar: `https://ui-avatars.com/api/?name=${signInForm.value.email.split('@')[0]}&background=fbbf24&color=000`
   };
   isSignedIn.value = true;
   closeSignIn();
@@ -185,8 +185,8 @@ const navigateTo = (view: 'analyze' | 'history') => {
   left: 0;
   top: 0;
   height: 100vh;
-  background: #0f1729;
-  border-right: 1px solid #1e3a5f;
+  background: linear-gradient(180deg, #0b0c0e 0%, #2a2d35 100%);
+  border-right: 1px solid #3a3d45;
   display: flex;
   flex-direction: column;
   width: 260px;
@@ -205,19 +205,20 @@ const navigateTo = (view: 'analyze' | 'history') => {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #0284c7;
-  border: 2px solid #0f1729;
-  color: white;
+  background: #fbbf24;
+  border: 2px solid #0b0c0e;
+  color: #000000;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
   z-index: 10;
+  font-weight: 700;
 }
 
 .toggle-btn:hover {
-  background: #0ea5e9;
+  background: #fcd34d;
   transform: scale(1.1);
 }
 
@@ -249,7 +250,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 
 .brand-mark {
   font-size: 1.5rem;
-  color: #0ea5e9;
+  color: #fbbf24;
   flex-shrink: 0;
 }
 
@@ -282,7 +283,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 
 .prompt-text {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: #9ca3af;
   line-height: 1.4;
 }
 
@@ -292,19 +293,20 @@ const navigateTo = (view: 'analyze' | 'history') => {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: #0284c7;
+  background: #fbbf24;
   border: none;
   border-radius: 8px;
-  color: white;
-  font-weight: 500;
+  color: #000000;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
 }
 
 .btn-sign-in:hover {
-  background: #0ea5e9;
+  background: #fcd34d;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
 .collapsed .btn-sign-in {
@@ -330,6 +332,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
   height: 40px;
   border-radius: 50%;
   flex-shrink: 0;
+  border: 2px solid #fbbf24;
 }
 
 .user-details {
@@ -349,7 +352,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 }
 
 .user-email {
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 0.75rem;
   white-space: nowrap;
   overflow: hidden;
@@ -360,17 +363,17 @@ const navigateTo = (view: 'analyze' | 'history') => {
   margin-top: 0.5rem;
   padding: 0.4rem 0.75rem;
   background: transparent;
-  border: 1px solid #334155;
+  border: 1px solid #4b5563;
   border-radius: 4px;
-  color: #cbd5e1;
+  color: #d1d5db;
   font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-sign-out:hover {
-  background: #1e293b;
-  border-color: #475569;
+  background: #2a2d35;
+  border-color: #6b7280;
 }
 
 /* Navigation */
@@ -394,7 +397,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #cbd5e1;
+  color: #d1d5db;
   cursor: pointer;
   transition: all 0.2s;
   text-align: left;
@@ -407,12 +410,13 @@ const navigateTo = (view: 'analyze' | 'history') => {
 }
 
 .nav-item:hover {
-  background: #1e3a5f;
+  background: rgba(42, 45, 53, 0.7);
 }
 
 .nav-item.active {
-  background: #0284c7;
-  color: white;
+  background: #fbbf24;
+  color: #000000;
+  font-weight: 600;
 }
 
 .nav-icon {
@@ -429,7 +433,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 .sidebar-footer {
   padding: 0 1rem;
   margin-top: auto;
-  border-top: 1px solid #1e3a5f;
+  border-top: 1px solid #3a3d45;
   padding-top: 1rem;
 }
 
@@ -446,7 +450,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #94a3b8;
+  color: #9ca3af;
   cursor: pointer;
   transition: all 0.2s;
   width: 100%;
@@ -458,8 +462,8 @@ const navigateTo = (view: 'analyze' | 'history') => {
 }
 
 .footer-item:hover {
-  background: #1e293b;
-  color: #cbd5e1;
+  background: rgba(42, 45, 53, 0.7);
+  color: #d1d5db;
 }
 
 /* Modal */
@@ -469,7 +473,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -478,12 +482,12 @@ const navigateTo = (view: 'analyze' | 'history') => {
 }
 
 .modal-content {
-  background: #0f1729;
-  border: 1px solid #1e3a5f;
+  background: linear-gradient(180deg, #0b0c0e 0%, #2a2d35 100%);
+  border: 1px solid #3a3d45;
   border-radius: 12px;
   width: 90%;
   max-width: 450px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
 .modal-header {
@@ -491,7 +495,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  border-bottom: 1px solid #1e3a5f;
+  border-bottom: 1px solid #3a3d45;
 }
 
 .modal-header h2 {
@@ -503,7 +507,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 .btn-close {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 1.5rem;
   cursor: pointer;
   padding: 0;
@@ -517,7 +521,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 }
 
 .btn-close:hover {
-  background: #1e293b;
+  background: #2a2d35;
   color: white;
 }
 
@@ -531,7 +535,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
 
 .form-group label {
   display: block;
-  color: #cbd5e1;
+  color: #d1d5db;
   font-weight: 500;
   margin-bottom: 0.5rem;
   font-size: 0.9rem;
@@ -540,8 +544,8 @@ const navigateTo = (view: 'analyze' | 'history') => {
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: #1a1b1f;
+  border: 1px solid #4b5563;
   border-radius: 6px;
   color: white;
   font-size: 1rem;
@@ -550,17 +554,18 @@ const navigateTo = (view: 'analyze' | 'history') => {
 
 .form-group input:focus {
   outline: none;
-  border-color: #0284c7;
-  background: #0f172a;
+  border-color: #fbbf24;
+  background: #0b0c0e;
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
 }
 
 .form-group input::placeholder {
-  color: #64748b;
+  color: #6b7280;
 }
 
 .form-notice {
-  background: #422006;
-  border: 1px solid #92400e;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
   border-radius: 6px;
   padding: 0.875rem;
   margin-bottom: 1.25rem;
@@ -589,7 +594,7 @@ const navigateTo = (view: 'analyze' | 'history') => {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 6px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 0.95rem;
@@ -597,21 +602,22 @@ const navigateTo = (view: 'analyze' | 'history') => {
 
 .btn-secondary {
   background: transparent;
-  border: 1px solid #334155;
-  color: #cbd5e1;
+  border: 1px solid #4b5563;
+  color: #d1d5db;
 }
 
 .btn-secondary:hover {
-  background: #1e293b;
+  background: #2a2d35;
 }
 
 .btn-primary {
-  background: #0284c7;
-  color: white;
+  background: #fbbf24;
+  color: #000000;
 }
 
 .btn-primary:hover {
-  background: #0ea5e9;
+  background: #fcd34d;
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 </style>
