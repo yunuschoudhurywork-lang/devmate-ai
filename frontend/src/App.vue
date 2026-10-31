@@ -1,34 +1,92 @@
 <script setup lang="ts">
 import { ref } from "vue";
+import Sidebar from "@/components/Sidebar.vue";
 import AnalyzeView from "@/views/AnalyzeView.vue";
 import HistoryView from "@/views/HistoryView.vue";
 
 const currentView = ref<"analyze" | "history">("analyze");
+
+const handleNavigation = (view: "analyze" | "history") => {
+  currentView.value = view;
+};
 </script>
 
 <template>
   <div class="app-container">
-    <header>
-      <div>
-        <span class="brand-mark">◆</span>
-        <strong>DevMate AI</strong>
-        <small>Code analysis workspace</small>
+    <Sidebar @navigate="handleNavigation" />
+    
+    <main class="main-content">
+      <header>
+        <div class="header-content">
+          <h1>{{ currentView === 'analyze' ? 'Code Analysis' : 'Analysis History' }}</h1>
+          <p class="subtitle">
+            {{ currentView === 'analyze' 
+              ? 'Analyze your code for quality, security, and performance issues' 
+              : 'View and manage your past analysis reports' 
+            }}
+          </p>
+        </div>
+      </header>
+      
+      <div class="view-container">
+        <AnalyzeView v-if="currentView === 'analyze'" />
+        <HistoryView v-else-if="currentView === 'history'" />
       </div>
-      <nav class="nav-buttons">
-        <button :class="{ active: currentView === 'analyze' }" @click="currentView = 'analyze'">Analyze</button>
-        <button :class="{ active: currentView === 'history' }" @click="currentView = 'history'">History</button>
-      </nav>
-    </header>
-    <AnalyzeView v-if="currentView === 'analyze'" />
-    <HistoryView v-else-if="currentView === 'history'" />
+    </main>
   </div>
 </template>
 
 <style>
-.app-container { min-height: 100vh; }
-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 2rem; background: #0f1729; border-bottom: 1px solid #1e3a5f; }
-.nav-buttons { display: flex; gap: .5rem; }
-.nav-buttons button { background: transparent; border: 1px solid #334155; border-radius: 6px; color: #cbd5e1; cursor: pointer; padding: .6rem 1.2rem; transition: all .2s; }
-.nav-buttons button:hover { background: #1e3a5f; border-color: #0ea5e9; }
-.nav-buttons button.active { background: #0284c7; border-color: #0284c7; color: white; }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: #0a0f1e;
+  color: #e2e8f0;
+}
+
+.app-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 260px;
+  transition: margin-left 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Adjust for collapsed sidebar */
+.app-container:has(.sidebar.collapsed) .main-content {
+  margin-left: 70px;
+}
+
+header {
+  background: #0f1729;
+  border-bottom: 1px solid #1e3a5f;
+  padding: 2rem 2.5rem;
+}
+
+.header-content h1 {
+  color: white;
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  color: #94a3b8;
+  font-size: 0.95rem;
+}
+
+.view-container {
+  flex: 1;
+  overflow: auto;
+}
 </style>
