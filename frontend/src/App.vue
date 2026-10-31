@@ -45,13 +45,14 @@ const handleNavigation = (view: "analyze" | "history") => {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #0a0f1e;
+  background: #0b0c0e;
   color: #e2e8f0;
 }
 
 .app-container {
   display: flex;
   min-height: 100vh;
+  background: #0b0c0e;
 }
 
 .main-content {
@@ -60,6 +61,7 @@ body {
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(180deg, #0b0c0e 0%, #2a2d35 100%);
 }
 
 /* Adjust for collapsed sidebar */
@@ -68,9 +70,10 @@ body {
 }
 
 header {
-  background: #0f1729;
-  border-bottom: 1px solid #1e3a5f;
+  background: rgba(42, 45, 53, 0.5);
+  border-bottom: 1px solid #3a3d45;
   padding: 2rem 2.5rem;
+  backdrop-filter: blur(10px);
 }
 
 .header-content h1 {
@@ -81,7 +84,7 @@ header {
 }
 
 .subtitle {
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 0.95rem;
 }
 
