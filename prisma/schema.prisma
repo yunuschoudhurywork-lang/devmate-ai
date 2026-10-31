@@ -9,11 +9,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// User model for WorkOS authentication
+model User {
+  id           String   @id @default(uuid())
+  workosId     String   @unique  // Stable WorkOS user ID
+  email        String   @unique
+  firstName    String?
+  lastName     String?
+  profileImage String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  reports Report[]
+
+  @@index([workosId])
+  @@index([email])
+}
+
 model Report {
   id        String   @id @default(uuid())
   language  String
   filename  String?
   createdAt DateTime @default(now())
+
+  // Owner relationship (nullable for legacy reports)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Summary counts
   totalFindings    Int
@@ -34,6 +56,7 @@ model Report {
   explanations  Explanation[]
 
   @@index([createdAt])
+  @@index([userId])
 }
 
 model Finding {

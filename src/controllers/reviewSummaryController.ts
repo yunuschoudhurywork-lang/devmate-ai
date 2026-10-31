@@ -24,11 +24,12 @@ export function createReviewSummaryController(summaryService: ReviewSummaryServi
     try {
       const summary = await summaryService.generateSummary(input);
 
-      // Persist summary if reportId is provided
+      // Persist summary if reportId is provided (with ownership validation)
       const body = request.body as ReviewSummaryRequestBody;
       if (body.reportId && typeof body.reportId === "string") {
         try {
-          await saveReviewSummary(body.reportId, summary);
+          const userId = request.user?.id;
+          await saveReviewSummary(body.reportId, summary, userId);
         } catch (error) {
           console.error("Failed to persist review summary:", error);
           // Don't fail the request if persistence fails

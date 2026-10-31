@@ -30,10 +30,11 @@ export async function analyzeCode(request: Request, response: Response): Promise
 
   const analysis = await analysisService.analyze({ code: body.code, language, filename: body.filename });
 
-  // Persist the analysis report
+  // Persist the analysis report with user ownership if authenticated
   let reportId: string | undefined;
   try {
-    reportId = await saveAnalysisReport({ language, filename: body.filename }, analysis);
+    const userId = request.user?.id;
+    reportId = await saveAnalysisReport({ language, filename: body.filename, userId }, analysis);
   } catch (error) {
     // Log but don't fail the request if persistence fails
     console.error("Failed to persist analysis report:", error);
