@@ -7,6 +7,10 @@ import FindingsList from "@/components/FindingsList.vue";
 import QualityScore from "@/components/QualityScore.vue";
 import ReviewSummary from "@/components/ReviewSummary.vue";
 
+const emit = defineEmits<{
+  backToAnalyze: []
+}>();
+
 const reports = ref<ReportListItem[]>([]);
 const selectedReport = ref<SavedReport | null>(null);
 const loading = ref(false);
@@ -89,7 +93,7 @@ function formatDate(dateString: string): string {
   <main class="history">
     <header class="history-header">
       <h1>📊 Analysis History</h1>
-      <button @click="$router?.push?.('/') || (window.location.href = '/')" class="back-button">← Back to Analyze</button>
+      <button @click="emit('backToAnalyze')" class="back-button">← Back to Analyze</button>
     </header>
 
     <div v-if="selectedReport" class="report-view">
