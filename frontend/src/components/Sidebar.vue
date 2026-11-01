@@ -1,51 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useAuth } from '@/composables/useAuth';
 
 const isCollapsed = ref(false);
-const isSignedIn = ref(false);
-const showSignInModal = ref(false);
+const { user, isLoading, login, logout } = useAuth();
 
-// User data (will be populated after sign in)
-const user = ref({
-  name: '',
-  email: '',
-  avatar: ''
+// Computed properties
+const isSignedIn = computed(() => user.value !== null);
+const userName = computed(() => {
+  if (!user.value) return '';
+  if (user.value.firstName && user.value.lastName) {
+    return `${user.value.firstName} ${user.value.lastName}`;
+  }
+  return user.value.firstName || user.value.email.split('@')[0];
 });
-
-// Sign in form data
-const signInForm = ref({
-  email: '',
-  password: ''
+const userAvatar = computed(() => {
+  if (!user.value) return '';
+  if (user.value.profileImage) {
+    return user.value.profileImage;
+  }
+  const name = encodeURIComponent(userName.value);
+  return `https://ui-avatars.com/api/?name=${name}&background=fbbf24&color=000`;
 });
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value;
 };
 
-const openSignIn = () => {
-  showSignInModal.value = true;
-};
-
-const closeSignIn = () => {
-  showSignInModal.value = false;
-  signInForm.value = { email: '', password: '' };
-};
-
 const handleSignIn = () => {
-  // TODO: Implement actual authentication in Phase 5
-  // For now, just simulate sign in
-  user.value = {
-    name: signInForm.value.email.split('@')[0],
-    email: signInForm.value.email,
-    avatar: `https://ui-avatars.com/api/?name=${signInForm.value.email.split('@')[0]}&background=fbbf24&color=000`
-  };
-  isSignedIn.value = true;
-  closeSignIn();
+  login();
 };
 
-const handleSignOut = () => {
-  isSignedIn.value = false;
-  user.value = { name: '', email: '', avatar: '' };
+const handleSignOut = async () => {
+  if (confirm('Are you sure you want to sign out?')) {
+    await logout();
+  }
 };
 
 const emit = defineEmits<{
@@ -83,18 +72,29 @@ const navigateTo = (view: 'analyze' | 'history') => {
           <div v-if="!isCollapsed" class="prompt-text">
             <p>Sign in to save your analysis history</p>
           </div>
-          <button class="btn-sign-in" @click="openSignIn" :title="isCollapsed ? 'Sign In' : ''">
+          <button 
+            class="btn-sign-in" 
+            @click="handleSignIn" 
+            :disabled="isLoading"
+            :title="isCollapsed ? 'Sign In' : ''"
+          >
             <span class="icon">👤</span>
-            <span v-if="!isCollapsed">Sign In</span>
+            <span v-if="!isCollapsed">{{ isLoading ? 'Loading...' : 'Sign In' }}</span>
           </button>
         </div>
 
         <div v-else class="user-info">
-          <img :src="user.avatar" :alt="user.name" class="user-avatar" />
+          <img :src="userAvatar" :alt="userName" class="user-avatar" />
           <div v-if="!isCollapsed" class="user-details">
-            <div class="user-name">{{ user.name }}</div>
-            <div class="user-email">{{ user.email }}</div>
-            <button class="btn-sign-out" @click="handleSignOut">Sign Out</button>
+            <div class="user-name">{{ userName }}</div>
+            <div class="user-email">{{ user?.email }}</div>
+            <button 
+              class="btn-sign-out" 
+              @click="handleSignOut"
+              :disabled="isLoading"
+            >
+              {{ isLoading ? 'Signing out...' : 'Sign Out' }}
+            </button>
           </div>
         </div>
       </div>
@@ -128,54 +128,6 @@ const navigateTo = (view: 'analyze' | 'history') => {
         </button>
       </div>
     </div>
-
-    <!-- Sign In Modal -->
-    <Teleport to="body">
-      <div v-if="showSignInModal" class="modal-overlay" @click="closeSignIn">
-        <div class="modal-content" @click.stop>
-          <div class="modal-header">
-            <h2>Sign In to DevMate AI</h2>
-            <button class="btn-close" @click="closeSignIn">✕</button>
-          </div>
-
-          <form @submit.prevent="handleSignIn" class="sign-in-form">
-            <div class="form-group">
-              <label for="email">Email</label>
-              <input 
-                id="email"
-                v-model="signInForm.email" 
-                type="email" 
-                placeholder="your@email.com"
-                required
-                autocomplete="email"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="password">Password</label>
-              <input 
-                id="password"
-                v-model="signInForm.password" 
-                type="password" 
-                placeholder="••••••••"
-                required
-                autocomplete="current-password"
-              />
-            </div>
-
-            <div class="form-notice">
-              <p>⚠️ Authentication is not yet implemented (Phase 5)</p>
-              <p>This is a UI preview. Any email will work for demo.</p>
-            </div>
-
-            <div class="form-actions">
-              <button type="button" class="btn-secondary" @click="closeSignIn">Cancel</button>
-              <button type="submit" class="btn-primary">Sign In</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </Teleport>
   </aside>
 </template>
 
@@ -309,6 +261,12 @@ const navigateTo = (view: 'analyze' | 'history') => {
   box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 
+.btn-sign-in:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .collapsed .btn-sign-in {
   padding: 0.75rem;
 }
@@ -374,6 +332,11 @@ const navigateTo = (view: 'analyze' | 'history') => {
 .btn-sign-out:hover {
   background: #2a2d35;
   border-color: #6b7280;
+}
+
+.btn-sign-out:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* Navigation */
@@ -464,160 +427,5 @@ const navigateTo = (view: 'analyze' | 'history') => {
 .footer-item:hover {
   background: rgba(42, 45, 53, 0.7);
   color: #d1d5db;
-}
-
-/* Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(4px);
-}
-
-.modal-content {
-  background: linear-gradient(180deg, #0b0c0e 0%, #2a2d35 100%);
-  border: 1px solid #3a3d45;
-  border-radius: 12px;
-  width: 90%;
-  max-width: 450px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid #3a3d45;
-}
-
-.modal-header h2 {
-  color: white;
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.btn-close {
-  background: transparent;
-  border: none;
-  color: #9ca3af;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
-}
-
-.btn-close:hover {
-  background: #2a2d35;
-  color: white;
-}
-
-.sign-in-form {
-  padding: 1.5rem;
-}
-
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
-.form-group label {
-  display: block;
-  color: #d1d5db;
-  font-weight: 500;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  background: #1a1b1f;
-  border: 1px solid #4b5563;
-  border-radius: 6px;
-  color: white;
-  font-size: 1rem;
-  transition: all 0.2s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #fbbf24;
-  background: #0b0c0e;
-  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.1);
-}
-
-.form-group input::placeholder {
-  color: #6b7280;
-}
-
-.form-notice {
-  background: rgba(251, 191, 36, 0.1);
-  border: 1px solid rgba(251, 191, 36, 0.3);
-  border-radius: 6px;
-  padding: 0.875rem;
-  margin-bottom: 1.25rem;
-}
-
-.form-notice p {
-  color: #fbbf24;
-  font-size: 0.85rem;
-  margin: 0;
-  line-height: 1.5;
-}
-
-.form-notice p:first-child {
-  font-weight: 600;
-  margin-bottom: 0.25rem;
-}
-
-.form-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-}
-
-.btn-secondary,
-.btn-primary {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-size: 0.95rem;
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1px solid #4b5563;
-  color: #d1d5db;
-}
-
-.btn-secondary:hover {
-  background: #2a2d35;
-}
-
-.btn-primary {
-  background: #fbbf24;
-  color: #000000;
-}
-
-.btn-primary:hover {
-  background: #fcd34d;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
 }
 </style>
