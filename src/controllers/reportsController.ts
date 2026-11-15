@@ -70,6 +70,8 @@ export async function getReport(request: Request, response: Response): Promise<v
         language: report.language,
         filename: report.filename,
         createdAt: report.createdAt,
+        projectId: report.projectId,
+        projectName: report.projectName,
         analysis: {
           language: report.language,
           findings: report.findings,

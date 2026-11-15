@@ -15,6 +15,7 @@ export interface AnalysisInput {
   language: AnalysisLanguage;
   filename?: string;
   code: string;
+  projectId?: string;
 }
 
 export interface AnalysisResult {
@@ -94,6 +95,8 @@ export interface ReportListItem {
   totalFindings: number;
   overallScore: number;
   hasReviewSummary: boolean;
+  projectId: string | null;
+  projectName: string | null;
 }
 
 export interface ReportsListSuccessResponse {
@@ -112,6 +115,8 @@ export interface SavedReport {
   language: string;
   filename: string | null;
   createdAt: string;
+  projectId?: string | null;
+  projectName?: string | null;
   analysis: AnalysisResult;
   reviewSummary: ReviewSummary | null;
   explanations: Record<string, FindingExplanation>;
@@ -120,4 +125,187 @@ export interface SavedReport {
 export interface ReportSuccessResponse {
   success: true;
   report: SavedReport;
+}
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+
+export interface User {
+  id: string;
+  email: string;
+  name: string | null;
+  avatarUrl: string | null;
+  provider: "local" | "github" | string;
+  githubLogin: string | null;
+  hasPassword?: boolean;
+  createdAt?: string;
+}
+
+export interface AuthSuccessResponse {
+  success: true;
+  user: User;
+  token: string;
+}
+
+export interface AuthConfig {
+  success: true;
+  passwordAuth: boolean;
+  githubEnabled: boolean;
+  ai: {
+    configured: boolean;
+    provider: string | null;
+    model: string | null;
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Projects
+// ---------------------------------------------------------------------------
+
+export interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  repoUrl: string | null;
+  repoFullName: string | null;
+  provider: string;
+  defaultBranch: string;
+  language: string | null;
+  visibility: string;
+  createdAt: string;
+  updatedAt: string;
+  reportCount: number;
+  averageScore: number | null;
+  lastAnalyzedAt: string | null;
+}
+
+export interface ProjectInput {
+  name: string;
+  description?: string | null;
+  repoUrl?: string | null;
+  repoFullName?: string | null;
+  defaultBranch?: string;
+  language?: string | null;
+  visibility?: string;
+  provider?: string;
+}
+
+export interface ProjectsSuccessResponse {
+  success: true;
+  projects: Project[];
+}
+
+// ---------------------------------------------------------------------------
+// Dashboard
+// ---------------------------------------------------------------------------
+
+export interface DashboardData {
+  success: true;
+  stats: {
+    reports: number;
+    projects: number;
+    artifacts: number;
+    findings: number;
+    securityFindings: number;
+    performanceFindings: number;
+    errorFindings: number;
+    averageScore: number;
+    categoryAverages: {
+      correctness: number;
+      security: number;
+      performance: number;
+    };
+  };
+  scoreTrend: Array<{ date: string; reports: number; averageScore: number | null }>;
+  recentReports: Array<{
+    id: string;
+    filename: string | null;
+    language: string;
+    overallScore: number;
+    totalFindings: number;
+    createdAt: string;
+    project: { id: string; name: string } | null;
+  }>;
+  recentArtifacts: AiArtifactSummary[];
+}
+
+// ---------------------------------------------------------------------------
+// AI review engine
+// ---------------------------------------------------------------------------
+
+export type AiTaskKind = "review" | "pr-comments" | "security-fixes" | "refactor" | "bug-explanations";
+
+export interface AiTaskInput {
+  language: string;
+  filename?: string;
+  code: string;
+  findings?: Finding[];
+  reportId?: string;
+}
+
+export interface AiReviewResult {
+  summary: string;
+  verdict: string;
+  strengths: string[];
+  concerns: Array<{ title: string; severity: string; detail: string; line?: number }>;
+  nextSteps: string[];
+}
+
+export interface AiPrCommentsResult {
+  comments: Array<{ path: string; line: number; severity: string; body: string }>;
+}
+
+export interface AiSecurityResult {
+  summary: string;
+  fixes: Array<{
+    title: string;
+    severity: string;
+    category?: string;
+    explanation: string;
+    remediation: string;
+    codeExample?: string;
+  }>;
+}
+
+export interface AiRefactorResult {
+  summary: string;
+  recommendations: Array<{
+    title: string;
+    rationale: string;
+    impact?: string;
+    effort?: string;
+    steps: string[];
+  }>;
+}
+
+export interface AiBugResult {
+  explanations: Array<{
+    title: string;
+    line?: number;
+    rootCause: string;
+    explanation: string;
+    fix: string;
+    testSuggestion: string;
+  }>;
+}
+
+export interface AiTaskResponse {
+  success: true;
+  kind: AiTaskKind;
+  provider: string;
+  model: string;
+  result: unknown;
+  artifactId: string;
+}
+
+export interface AiArtifactSummary {
+  id: string;
+  kind: AiTaskKind | string;
+  title: string;
+  provider: string;
+  model: string;
+  reportId: string | null;
+  createdAt: string;
+  content: unknown;
 }

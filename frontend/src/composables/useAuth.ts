@@ -1,5 +1,13 @@
 import { ref, readonly } from "vue";
-import { getCurrentUser, logout as logoutApi, getLoginUrl, type User } from "@/services/api";
+import {
+  getCurrentUser,
+  getGithubLoginUrl,
+  login as loginApi,
+  logout as logoutApi,
+  setStoredToken,
+  signup as signupApi
+} from "@/services/api";
+import type { User } from "@/types/analysis";
 
 // Shared state across all component instances
 const user = ref<User | null>(null);
@@ -9,13 +17,8 @@ const error = ref<string | null>(null);
 let restorePromise: Promise<void> | null = null;
 
 export function useAuth() {
-  /**
-   * Restore session by checking if user is authenticated
-   * Should be called once on app mount
-   */
-  async function restoreSession(): Promise<void> {
-    // Prevent multiple simultaneous restore attempts
-    if (restorePromise) {
+  async function restoreSession(force = false): Promise<void> {
+    if (restorePromise && !force) {
       return restorePromise;
     }
 
@@ -24,10 +27,9 @@ export function useAuth() {
       error.value = null;
 
       try {
-        const currentUser = await getCurrentUser();
-        user.value = currentUser;
-      } catch (err) {
-        console.error("Failed to restore session:", err);
+        user.value = await getCurrentUser();
+      } catch (caught) {
+        console.error("Failed to restore session:", caught);
         error.value = "Failed to restore session";
         user.value = null;
       } finally {
@@ -38,78 +40,100 @@ export function useAuth() {
     return restorePromise;
   }
 
-  /**
-   * Redirect user to WorkOS login page
-   */
-  function login(): void {
-    window.location.href = getLoginUrl();
+  async function signIn(email: string, password: string): Promise<boolean> {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const result = await loginApi({ email, password });
+      user.value = result.user;
+      return true;
+    } catch (caught) {
+      error.value = caught instanceof Error ? caught.message : "Unable to sign in.";
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  /**
-   * Log out the current user
-   */
-  async function logout(): Promise<void> {
+  async function signUp(name: string, email: string, password: string): Promise<boolean> {
+    isLoading.value = true;
+    error.value = null;
+    try {
+      const result = await signupApi({ name: name || undefined, email, password });
+      user.value = result.user;
+      return true;
+    } catch (caught) {
+      error.value = caught instanceof Error ? caught.message : "Unable to create the account.";
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  function loginWithGitHub(): void {
+    window.location.href = getGithubLoginUrl();
+  }
+
+  async function signOut(): Promise<void> {
     isLoading.value = true;
     error.value = null;
 
     try {
       await logoutApi();
+    } catch (caught) {
+      console.error("Logout failed:", caught);
+    } finally {
       user.value = null;
-      // Redirect to home after logout
-      window.location.href = "/";
-    } catch (err) {
-      console.error("Logout failed:", err);
-      error.value = err instanceof Error ? err.message : "Failed to log out";
+      setStoredToken(null);
+      restorePromise = null;
       isLoading.value = false;
+      window.location.href = "/";
     }
   }
 
-  /**
-   * Check URL for authentication errors
-   * Returns error message if present, null otherwise
-   */
+  function setUser(nextUser: User | null): void {
+    user.value = nextUser;
+  }
+
   function checkAuthError(): string | null {
     const params = new URLSearchParams(window.location.search);
     const errorParam = params.get("error");
 
-    if (!errorParam) {
-      return null;
-    }
+    if (!errorParam) return null;
 
-    // Map error codes to user-friendly messages
     switch (errorParam) {
       case "missing_code":
-        return "Authentication failed: missing authorization code";
+        return "GitHub sign-in failed: missing authorization code.";
+      case "invalid_state":
+        return "GitHub sign-in failed: the security check did not match. Please try again.";
+      case "github_not_configured":
+        return "GitHub sign-in is not configured on this server.";
       case "auth_failed":
-        return "Authentication failed: could not verify your credentials";
-      case "callback_error":
-        return "Authentication failed: an error occurred during login";
+        return "GitHub sign-in failed: could not verify your GitHub account.";
       default:
-        return "Authentication failed: an unknown error occurred";
+        return "Authentication failed: an unknown error occurred.";
     }
   }
 
-  /**
-   * Clear authentication error from URL
-   */
   function clearAuthError(): void {
     const url = new URL(window.location.href);
     url.searchParams.delete("error");
+    url.searchParams.delete("auth");
     window.history.replaceState({}, "", url.toString());
   }
 
   return {
-    // State (readonly to prevent external mutation)
     user: readonly(user),
     isLoading: readonly(isLoading),
     error: readonly(error),
-    isAuthenticated: readonly(ref(() => user.value !== null)),
 
-    // Methods
     restoreSession,
-    login,
-    logout,
+    signIn,
+    signUp,
+    loginWithGitHub,
+    signOut,
+    setUser,
     checkAuthError,
-    clearAuthError,
+    clearAuthError
   };
 }

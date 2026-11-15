@@ -1,8 +1,20 @@
 import "dotenv/config";
 import { app } from "./app";
+import { env, reportConfigurationWarnings } from "./config/env";
+import { disconnectDatabase } from "./db/prisma";
 
-const port = Number(process.env.PORT) || 3000;
+reportConfigurationWarnings();
 
-app.listen(port, () => {
-  console.log(`DevMate AI Phase 1 backend listening on port ${port}`);
+const server = app.listen(env.port, () => {
+  console.log(`DevMate AI backend listening on port ${env.port}`);
 });
+
+async function shutdown(signal: string): Promise<void> {
+  console.log(`${signal} received, shutting down.`);
+  server.close(() => {
+    void disconnectDatabase().finally(() => process.exit(0));
+  });
+}
+
+process.on("SIGINT", () => void shutdown("SIGINT"));
+process.on("SIGTERM", () => void shutdown("SIGTERM"));

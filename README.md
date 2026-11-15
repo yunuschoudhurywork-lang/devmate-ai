@@ -1,203 +1,128 @@
-# DevMate AI — Code Analysis Platform
+# DevMate AI — Code Review Platform
 
-DevMate AI is an AI-assisted automated code-review system with persistent analysis history. This repository contains a working Express backend with PostgreSQL database and Vue frontend that analyze JavaScript and TypeScript source code, returning deterministic error, security, and performance findings with optional AI-powered explanations and review summaries.
+DevMate AI analyzes JavaScript/TypeScript with deterministic ESLint-based rules, stores every analysis per user, organises repositories into projects, and layers an AI review engine (OpenAI, Azure OpenAI, Claude or Gemini) on top for human-like reviews, PR comments, security remediation, refactoring plans and bug explanations.
 
-## Install and run
+## Stack
 
-### Prerequisites
+| Layer | Technology |
+| --- | --- |
+| Backend | Node.js 18+, TypeScript, Express 5 |
+| Database | SQLite via Prisma (zero setup, file-based) |
+| Auth | JWT (HS256, http-only cookie + bearer token), scrypt password hashing, GitHub OAuth |
+| AI | Provider-agnostic: OpenAI, Azure OpenAI, Anthropic Claude, Google Gemini |
+| Frontend | Vue 3, Vite 6, Monaco Editor |
 
-- Node.js 18+ and npm
-- PostgreSQL 14+ (for Phase 4 persistence features)
-
-### Backend Setup
+## Quick start
 
 ```bash
+# backend
 npm install
+cp .env.example .env        # set JWT_SECRET (and optionally an AI key)
+npx prisma migrate deploy   # creates prisma/dev.db
+npm run dev                 # http://localhost:3000
 
-# Install Prisma (if not already installed)
-npm install prisma@latest @prisma/client@latest
-
-# Setup database
-cp .env.example .env
-# Edit .env and configure DATABASE_URL
-
-# Generate Prisma client and run migrations
-npx prisma generate
-npx prisma migrate dev --name init
-
-# Start development server
-npm run dev
-```
-
-The development server listens on `http://localhost:3000`. Build and run the compiled service with:
-
-```bash
-npm run build
-npm start
-```
-
-### Frontend Setup
-
-```bash
+# frontend (second terminal)
 cd frontend
 npm install
-npm run dev
+npm run dev                 # http://localhost:5173
 ```
 
-The frontend development server listens on `http://localhost:5173` by default.
+Open http://localhost:5173, create an account and run an analysis. The SQLite database file lives at `prisma/dev.db` and is git-ignored.
 
-## Database Setup
-
-### PostgreSQL Installation
-
-**Windows:** Download from https://www.postgresql.org/download/windows/
-
-**macOS:** `brew install postgresql@14`
-
-**Linux:** `sudo apt-get install postgresql-14`
-
-### Database Configuration
-
-Create database and user:
-
-```sql
-CREATE DATABASE devmate_dev;
-CREATE USER devmate WITH PASSWORD 'your_secure_password';
-GRANT ALL PRIVILEGES ON DATABASE devmate_dev TO devmate;
-```
-
-Configure `.env`:
+If you delete the database, recreate it with:
 
 ```bash
-DATABASE_URL=postgresql://devmate:your_secure_password@localhost:5432/devmate_dev
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-3.5-flash-lite
+npx prisma migrate deploy
 ```
 
-### Database Commands
+## Configuration
 
-```bash
-# Generate Prisma client after schema changes
-npm run db:generate
+All variables live in `.env` (see `.env.example`).
 
-# Create and apply migrations
-npm run db:migrate
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | SQLite path, default `file:./dev.db` (relative to `prisma/`) |
+| `JWT_SECRET` | Signing secret for sessions — use a long random value |
+| `JWT_TTL_SECONDS` | Token lifetime, default 7 days |
+| `FRONTEND_URL` | Allowed CORS origin and post-login redirect |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | Optional GitHub OAuth app |
+| `GITHUB_CALLBACK_URL` | Defaults to `http://localhost:3000/auth/github/callback` |
+| `AI_PROVIDER` | `openai`, `azure-openai`, `anthropic` or `gemini` (auto-detected when blank) |
+| `OPENAI_API_KEY`, `OPENAI_MODEL`, `OPENAI_BASE_URL` | OpenAI |
+| `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_DEPLOYMENT`, `AZURE_OPENAI_API_VERSION` | Azure OpenAI |
+| `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | Claude |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | Gemini |
 
-# Deploy migrations in production
-npm run db:migrate:deploy
+AI keys stay on the backend and never reach the browser. Without a key everything except the AI features works, and AI endpoints return a clear `503` instead of failing silently.
 
-# Open Prisma Studio (database GUI)
-npm run db:studio
+### GitHub OAuth
+
+Create an OAuth App at https://github.com/settings/developers and set the authorization callback URL to `http://localhost:3000/auth/github/callback`, then fill in the client ID and secret. The sign-in button appears automatically once both are set. GitHub accounts are linked to an existing account when the email matches.
+
+## Features
+
+### Deterministic analysis
+- `POST /api/analyze` runs ESLint plus security and performance pattern analyzers
+- Quality score per category (correctness 40%, security 35%, performance 25%)
+- Findings are stored with the report for signed-in users
+
+### Accounts and sessions
+- Email/password signup and login with scrypt hashes and JWT sessions
+- GitHub OAuth sign-in with state validation
+- Profile updates, password changes and account deletion
+- Every report, project and AI artifact is scoped to its owner
+
+### Projects and repositories
+- Create, edit and delete projects (name, repo, branch, language, visibility)
+- Analyses can be attached to a project, which aggregates report counts and average scores
+- Dashboard shows totals, category averages, a 14-day quality trend and recent activity
+
+### History
+- Paginated report list with quality scores, project labels and AI-summary badges
+- Full report view with findings and stored AI explanations/summaries
+- Report deletion cascades to findings, summaries, explanations and artifacts
+
+### AI review engine
+Five tasks, each persisted as an `AiArtifact`:
+
+| Endpoint | Output |
+| --- | --- |
+| `POST /api/ai/review` | Overall review with verdict, strengths, concerns, next steps |
+| `POST /api/ai/pr-comments` | Inline, line-anchored PR comments |
+| `POST /api/ai/security-fixes` | Exploit path and remediation per security issue |
+| `POST /api/ai/refactor` | Refactoring recommendations with ordered steps |
+| `POST /api/ai/bug-explanations` | Root cause, fix and test suggestion per finding |
+
+Plus the original per-finding explanation (`POST /api/explain`) and review summary (`POST /api/review-summary`). AI output never modifies deterministic findings or scores.
+
+## API summary
+
+```
+GET    /health
+
+POST   /auth/signup              POST /auth/login        POST /auth/logout
+GET    /auth/me                  PATCH /auth/me          DELETE /auth/me
+POST   /auth/password            GET /auth/config
+GET    /auth/github              GET /auth/github/callback
+
+POST   /api/analyze              POST /api/explain       POST /api/review-summary
+GET    /api/reports              GET  /api/reports/:id   DELETE /api/reports/:id
+
+GET    /api/projects             POST /api/projects
+GET    /api/projects/:id         PATCH /api/projects/:id DELETE /api/projects/:id
+
+GET    /api/dashboard
+POST   /api/ai/review            POST /api/ai/pr-comments
+POST   /api/ai/security-fixes    POST /api/ai/refactor
+POST   /api/ai/bug-explanations
+GET    /api/ai/artifacts/:id     DELETE /api/ai/artifacts/:id
 ```
 
-## Test the API
-
-Check the service:
-
-```bash
-curl http://localhost:3000/health
-```
-
-Analyze JavaScript:
-
-```bash
-curl -X POST http://localhost:3000/api/analyze \
-  -H "Content-Type: application/json" \
-  -d '{"language":"javascript","filename":"example.js","code":"const value = 1;"}'
-```
-
-Get analysis history:
-
-```bash
-curl http://localhost:3000/api/reports
-```
-
-Get specific report:
-
-```bash
-curl http://localhost:3000/api/reports/{reportId}
-```
-
-Run the automated tests and type checker:
-
-```bash
-# Backend
-npm test
-npm run typecheck
-
-# Frontend
-cd frontend
-npm test
-npm run typecheck
-```
-
-## Completed features
-
-### Phase 1: Deterministic analysis engine
-- Node.js, TypeScript, and Express backend
-- `GET /health` and `POST /api/analyze` endpoints
-- ESLint-based JavaScript and TypeScript error analysis
-- Deterministic security and performance pattern analysis
-- Quality score calculation based only on normalized findings
-- Shared analyzer and finding contracts
-
-### Phase 2: Frontend analysis interface
-- Vue 3 with TypeScript frontend
-- Monaco code editor with syntax highlighting
-- Real-time language selection (JavaScript/TypeScript)
-- Analysis results display with quality scores
-- Findings organized by category (errors, security, performance)
-- Responsive design
-
-### Phase 3A: Individual AI explanations
-- `POST /api/explain` endpoint
-- Gemini API integration using `@google/genai` SDK
-- Structured JSON output with server-side validation
-- Per-finding "Explain with AI" action in the UI
-- Detailed explanations, suggested fixes, and caveats
-- Loading states and duplicate-request prevention
-- Comprehensive error handling
-
-### Phase 3B: AI review summary
-- `POST /api/review-summary` endpoint
-- Overall code review summary generation from analysis results
-- Structured summary with overview, key risks, priorities, and caveats
-- UI integration with dedicated "Generate AI Review Summary" button
-- Deterministic analysis results remain unchanged by AI features
-- No findings or quality scores modified by AI
-- Comprehensive backend and frontend test coverage
-
-### Phase 4: Persistent analysis reports and history
-- **PostgreSQL database** with Prisma ORM
-- **Complete persistence layer:**
-  - Analysis reports with findings and quality scores
-  - AI review summaries linked to reports
-  - Individual AI explanations linked to findings
-  - Automatic foreign key relationships with CASCADE delete
-- **History API endpoints:**
-  - `GET /api/reports` - Paginated list of saved reports
-  - `GET /api/reports/:reportId` - Retrieve complete report with all data
-  - `DELETE /api/reports/:reportId` - Delete report and associated data
-- **Updated analysis workflow:**
-  - `POST /api/analyze` now returns `reportId`
-  - `POST /api/explain` accepts `reportId` for persistence
-  - `POST /api/review-summary` accepts `reportId` for persistence
-- **History UI:**
-  - Browse saved analysis reports
-  - View historical findings without re-analysis
-  - Access saved AI summaries and explanations
-  - Delete unwanted reports
-  - Pagination support
-- **Database schema:**
-  - Report model: metadata, summary counts, quality scores
-  - Finding model: individual findings with all details
-  - ReviewSummary model: AI-generated summaries
-  - Explanation model: AI-generated explanations per finding
-- **Migration system:** Reproducible database schema versioning
+Authenticated requests use the `devmate_session` http-only cookie or `Authorization: Bearer <token>`.
 
 ## Quality scoring
 
-Every analysis starts each category at 100, subtracts deductions for findings in that category, and clamps each category to `0–100`. The final overall score is rounded to the nearest integer.
+Every category starts at 100, subtracts deductions per finding and is clamped to `0–100`.
 
 | Category | Weight | Deductions |
 | --- | ---: | --- |
@@ -207,159 +132,30 @@ Every analysis starts each category at 100, subtracts deductions for findings in
 
 `overall = correctness × 0.40 + security × 0.35 + performance × 0.25`.
 
-Critical correctness or performance findings are not emitted in the current implementation. If added later, they receive that category's strongest listed deduction.
-
-## AI features configuration
-
-DevMate can optionally provide AI-powered explanations and review summaries through Gemini. The backend keeps the API key secure—it never reaches the browser. Copy `.env.example` to `.env` and configure the backend before starting it:
+## Tests
 
 ```bash
-GEMINI_API_KEY=your_gemini_api_key
-GEMINI_MODEL=gemini-3.5-flash-lite
+npm test             # backend: 49 tests
+npm run typecheck
+cd frontend && npm test && npm run build
 ```
 
-`gemini-3.5-flash-lite` is the default stable, low-cost model.
+## Data and privacy
 
-### Individual explanations
-The `/api/explain` endpoint accepts a JavaScript or TypeScript code context plus one validated existing finding, requests structured JSON from Gemini, validates the response, and returns an explanation, potential fix, and caveats. When a `reportId` is provided, the explanation is persisted to the database. It does not execute, apply, or verify suggested fixes.
+- Source code is not stored; only metadata, findings and quality scores
+- AI requests send the submitted code to the configured provider, and only when you trigger an AI task
+- Deleting a report or account removes its dependent rows via cascading foreign keys
 
-### Review summaries
-The `/api/review-summary` endpoint accepts the complete analysis result and generates an overall review summary including:
-- Concise overview of code quality
-- Key risks based on actual findings
-- Prioritized remediation recommendations
-- Relevant caveats and limitations
+## Project layout
 
-When a `reportId` is provided, the summary is persisted to the database.
-
-**Important:** AI features complement but never modify the deterministic analysis results. Findings, severities, and quality scores remain unchanged regardless of AI responses.
-
-## Data privacy and retention
-
-**Phase 4 persistence behavior:**
-- Analysis reports store metadata, findings, and quality scores
-- Source code is **not** persisted to the database
-- AI summaries and explanations are stored when generated
-- All data is stored locally in your PostgreSQL database
-- No data is sent to external services except:
-  - Gemini API for AI features (when explicitly requested)
-  - Code snippets sent to Gemini are limited to finding context
-
-**Deletion:**
-- `DELETE /api/reports/:reportId` removes all associated data
-- Foreign key CASCADE ensures complete cleanup
-- Deleted reports cannot be recovered
-
-**Current limitations:**
-- No user authentication - all reports are accessible locally
-- No user ownership - reports belong to the application
-- No automatic cleanup or retention policies
-
-These limitations are addressed in Phase 5 (Authentication).
-
-## Troubleshooting
-
-### Database Connection Issues
-
-**"Connection refused":**
-- Ensure PostgreSQL is running: `pg_ctl status` or `sudo service postgresql status`
-- Verify DATABASE_URL in `.env`
-- Check PostgreSQL is listening on port 5432
-
-**"Prisma Client not generated":**
-```bash
-npx prisma generate
 ```
-
-**Migration errors:**
-```bash
-# Reset database (⚠️ deletes all data)
-npx prisma migrate reset
-
-# Or manually drop and recreate
-dropdb devmate_dev
-createdb devmate_dev
-npx prisma migrate dev
+src/
+  analyzers/        ESLint, security and performance analyzers
+  services/ai/      AI task prompts, validators and review engine
+  services/llm/     OpenAI / Azure / Anthropic / Gemini providers
+  controllers/      HTTP handlers
+  db/               Prisma client and repositories
+  middleware/       JWT auth
+prisma/             schema and migrations
+frontend/src/       Vue app (views, components, API client)
 ```
-
-### Test Database
-
-For isolated testing, create a separate database:
-
-```sql
-CREATE DATABASE devmate_test;
-GRANT ALL PRIVILEGES ON DATABASE devmate_test TO devmate;
-```
-
-Set `DATABASE_URL` to test database before running tests.
-
-## Project roadmap
-
-### ✅ Phase 1: Deterministic analysis engine
-- [x] Backend API with ESLint integration
-- [x] Error, security, and performance analyzers
-- [x] Quality score calculation
-
-### ✅ Phase 2: Frontend analysis interface
-- [x] Vue 3 frontend with Monaco editor
-- [x] Real-time code analysis
-- [x] Results visualization
-
-### ✅ Phase 3: AI-powered insights
-- [x] **Phase 3A:** Individual finding explanations
-- [x] **Phase 3B:** Overall review summaries
-- [x] Gemini API integration
-- [x] Final validation and testing
-
-### ✅ Phase 4: Database and history
-- [x] PostgreSQL integration with Prisma ORM
-- [x] Analysis report persistence
-- [x] AI results persistence
-- [x] History API endpoints
-- [x] History UI with pagination
-- [x] Report deletion
-- [x] Database migrations
-
-### 🔜 Phase 5: Authentication
-- [ ] User registration and login
-- [ ] Session management
-- [ ] Per-user report ownership
-- [ ] Access control
-
-### 🔜 Phase 6: GitHub integration
-- [ ] Repository connection
-- [ ] Branch analysis
-- [ ] Commit history integration
-
-### 🔜 Phase 7: PR review automation
-- [ ] Automated pull request analysis
-- [ ] Comment generation
-- [ ] Review status updates
-
-## Architecture
-
-### Backend Stack
-- **Runtime:** Node.js with TypeScript
-- **Framework:** Express 5
-- **Database:** PostgreSQL 14+
-- **ORM:** Prisma 5
-- **Static Analysis:** ESLint 9
-- **AI Provider:** Google Gemini via `@google/genai`
-
-### Frontend Stack
-- **Framework:** Vue 3 with TypeScript
-- **Build Tool:** Vite 6
-- **Code Editor:** Monaco Editor
-- **Styling:** Scoped CSS
-
-### Database Schema
-- **Report:** Analysis metadata and scores
-- **Finding:** Individual code issues
-- **ReviewSummary:** AI-generated summaries (1:1 with Report)
-- **Explanation:** AI-generated explanations (many:1 with Finding)
-
-## License
-
-Private project.
-
-
