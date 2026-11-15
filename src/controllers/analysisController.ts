@@ -7,7 +7,7 @@ const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
 const analysisService = new AnalysisService();
 
 export async function analyzeCode(request: Request, response: Response): Promise<void> {
-  const body = request.body as Partial<AnalysisInput> | undefined;
+  const body = request.body as (Partial<AnalysisInput> & { projectId?: unknown }) | undefined;
   const language = typeof body?.language === "string" ? body.language.toLowerCase() : undefined;
 
   if (!language || !SUPPORTED_LANGUAGES.has(language)) {
@@ -28,16 +28,32 @@ export async function analyzeCode(request: Request, response: Response): Promise
     return;
   }
 
+  if (body.projectId !== undefined && typeof body.projectId !== "string") {
+    response.status(400).json({ success: false, error: "'projectId' must be a string when provided." });
+    return;
+  }
+
   const analysis = await analysisService.analyze({ code: body.code, language, filename: body.filename });
 
-  // Persist the analysis report with user ownership if authenticated
+  // Only authenticated analyses are persisted, so history never contains orphaned anonymous rows.
   let reportId: string | undefined;
-  try {
-    const userId = request.user?.id;
-    reportId = await saveAnalysisReport({ language, filename: body.filename, userId }, analysis);
-  } catch (error) {
-    // Log but don't fail the request if persistence fails
-    console.error("Failed to persist analysis report:", error);
+  const userId = request.user?.id;
+
+  if (userId) {
+    try {
+      reportId = await saveAnalysisReport(
+        {
+          language,
+          filename: body.filename,
+          userId,
+          projectId: typeof body.projectId === "string" ? body.projectId : undefined
+        },
+        analysis
+      );
+    } catch (error) {
+      // Log but don't fail the request if persistence fails
+      console.error("Failed to persist analysis report:", error);
+    }
   }
 
   response.status(200).json({ success: true, analysis, reportId });

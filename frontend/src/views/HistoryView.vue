@@ -100,7 +100,10 @@ function formatDate(dateString: string): string {
       <div class="report-header">
         <div>
           <h2>{{ selectedReport.filename || 'Untitled' }}</h2>
-          <p class="report-meta">{{ selectedReport.language }} • {{ formatDate(selectedReport.createdAt) }}</p>
+          <p class="report-meta">
+            <span v-if="selectedReport.projectName" class="project-badge">{{ selectedReport.projectName }}</span>
+            {{ selectedReport.language }} • {{ formatDate(selectedReport.createdAt) }}
+          </p>
         </div>
         <button @click="closeReport" class="close-button">✕ Close</button>
       </div>
@@ -132,7 +135,10 @@ function formatDate(dateString: string): string {
           <div class="report-card-main">
             <div class="report-card-info">
               <h3>{{ report.filename || 'Untitled' }}</h3>
-              <p class="report-card-meta">{{ report.language }} • {{ formatDate(report.createdAt) }}</p>
+              <p class="report-card-meta">
+                <span v-if="report.projectName" class="project-badge">{{ report.projectName }}</span>
+                {{ report.language }} • {{ formatDate(report.createdAt) }}
+              </p>
             </div>
             <div class="report-card-stats">
               <div class="stat">
@@ -174,6 +180,7 @@ h1 { color: #e2e8f0; font-size: 2rem; margin: 0; }
 .report-card-main { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .report-card-info h3 { color: #e2e8f0; font-size: 1.1rem; margin: 0 0 .4rem; }
 .report-card-meta { color: #94a3b8; font-size: .85rem; margin: 0; }
+.project-badge { background: #1e3a5f; border-radius: 999px; color: #7dd3fc; font-size: .72rem; margin-right: .4rem; padding: .12rem .5rem; }
 .report-card-stats { display: flex; gap: 1.5rem; }
 .stat { display: grid; gap: .25rem; text-align: center; }
 .stat-label { color: #94a3b8; font-size: .75rem; }

@@ -6,6 +6,8 @@ export interface SavedReport {
   language: string;
   filename: string | null;
   createdAt: Date;
+  projectId: string | null;
+  projectName: string | null;
   totalFindings: number;
   errorCount: number;
   warningCount: number;
@@ -31,18 +33,40 @@ export interface ReportListItem {
   totalFindings: number;
   overallScore: number;
   hasReviewSummary: boolean;
+  projectId: string | null;
+  projectName: string | null;
 }
 
-/** Save a complete analysis report with all findings */
+function parseStringArray(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed.filter((entry): entry is string => typeof entry === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Save a complete analysis report with all findings. */
 export async function saveAnalysisReport(
-  input: { language: string; filename?: string; userId?: string },
+  input: { language: string; filename?: string; userId?: string; projectId?: string },
   result: AnalysisResult
 ): Promise<string> {
+  let projectId: string | null = null;
+
+  if (input.projectId && input.userId) {
+    const project = await prisma.project.findFirst({
+      where: { id: input.projectId, userId: input.userId },
+      select: { id: true }
+    });
+    projectId = project?.id ?? null;
+  }
+
   const report = await prisma.report.create({
     data: {
       language: input.language,
       filename: input.filename || null,
       userId: input.userId || null,
+      projectId,
       totalFindings: result.summary.total,
       errorCount: result.summary.errors,
       warningCount: result.summary.warnings,
@@ -59,24 +83,27 @@ export async function saveAnalysisReport(
           line: finding.line,
           message: finding.message,
           ruleId: finding.ruleId,
-          suggestion: finding.suggestion || null,
-        })),
-      },
-    },
+          suggestion: finding.suggestion || null
+        }))
+      }
+    }
   });
 
   return report.id;
 }
 
-/** Get paginated list of reports for a specific user */
+/** Get a paginated list of reports for a user, optionally scoped to a project. */
 export async function getReportsList(
   page = 1,
   pageSize = 20,
-  userId?: string
+  userId?: string,
+  projectId?: string
 ): Promise<{ reports: ReportListItem[]; total: number }> {
   const skip = (page - 1) * pageSize;
-
-  const where = userId ? { userId } : { userId: null };
+  const where = {
+    ...(userId ? { userId } : { userId: null }),
+    ...(projectId ? { projectId } : {})
+  };
 
   const [reports, total] = await Promise.all([
     prisma.report.findMany({
@@ -91,27 +118,31 @@ export async function getReportsList(
         createdAt: true,
         totalFindings: true,
         overallScore: true,
-        reviewSummary: { select: { id: true } },
-      },
+        projectId: true,
+        project: { select: { name: true } },
+        reviewSummary: { select: { id: true } }
+      }
     }),
-    prisma.report.count({ where }),
+    prisma.report.count({ where })
   ]);
 
   return {
-    reports: reports.map((r) => ({
-      id: r.id,
-      language: r.language,
-      filename: r.filename,
-      createdAt: r.createdAt,
-      totalFindings: r.totalFindings,
-      overallScore: r.overallScore,
-      hasReviewSummary: Boolean(r.reviewSummary),
+    reports: reports.map((report) => ({
+      id: report.id,
+      language: report.language,
+      filename: report.filename,
+      createdAt: report.createdAt,
+      totalFindings: report.totalFindings,
+      overallScore: report.overallScore,
+      hasReviewSummary: Boolean(report.reviewSummary),
+      projectId: report.projectId,
+      projectName: report.project?.name ?? null
     })),
-    total,
+    total
   };
 }
 
-/** Get a complete report by ID with ownership validation */
+/** Get a complete report by ID with ownership validation. */
 export async function getReportById(reportId: string, userId?: string): Promise<FullReport | null> {
   const where = userId ? { id: reportId, userId } : { id: reportId, userId: null };
 
@@ -119,42 +150,41 @@ export async function getReportById(reportId: string, userId?: string): Promise<
     where,
     include: {
       findings: true,
+      project: { select: { name: true } },
       reviewSummary: true,
-      explanations: { include: { finding: true } },
-    },
+      explanations: true
+    }
   });
 
   if (!report) return null;
 
-  // Convert database records to application types
-  const findings: Finding[] = report.findings.map((f) => ({
-    type: f.type as Finding["type"],
-    severity: f.severity as Finding["severity"],
-    line: f.line,
-    message: f.message,
-    ruleId: f.ruleId,
-    suggestion: f.suggestion || undefined,
+  const findings: Finding[] = report.findings.map((finding) => ({
+    type: finding.type as Finding["type"],
+    severity: finding.severity as Finding["severity"],
+    line: finding.line,
+    message: finding.message,
+    ruleId: finding.ruleId,
+    suggestion: finding.suggestion || undefined
   }));
 
   const reviewSummary: ReviewSummary | null = report.reviewSummary
     ? {
         summary: report.reviewSummary.summary,
-        keyRisks: report.reviewSummary.keyRisks,
-        priorities: report.reviewSummary.priorities,
-        caveats: report.reviewSummary.caveats,
+        keyRisks: parseStringArray(report.reviewSummary.keyRisks),
+        priorities: parseStringArray(report.reviewSummary.priorities),
+        caveats: report.reviewSummary.caveats
       }
     : null;
 
-  // Build explanations map keyed by finding ruleId-line-type
   const explanations = new Map<string, FindingExplanation>();
-  for (const exp of report.explanations) {
-    const finding = report.findings.find((f) => f.id === exp.findingId);
+  for (const explanation of report.explanations) {
+    const finding = report.findings.find((entry) => entry.id === explanation.findingId);
     if (finding) {
       const key = `${finding.ruleId}-${finding.line}-${finding.type}`;
       explanations.set(key, {
-        explanation: exp.explanation,
-        suggestedFix: exp.suggestedFix,
-        caveats: exp.caveats,
+        explanation: explanation.explanation,
+        suggestedFix: explanation.suggestedFix,
+        caveats: explanation.caveats
       });
     }
   }
@@ -164,6 +194,8 @@ export async function getReportById(reportId: string, userId?: string): Promise<
     language: report.language,
     filename: report.filename,
     createdAt: report.createdAt,
+    projectId: report.projectId,
+    projectName: report.project?.name ?? null,
     totalFindings: report.totalFindings,
     errorCount: report.errorCount,
     warningCount: report.warningCount,
@@ -175,72 +207,59 @@ export async function getReportById(reportId: string, userId?: string): Promise<
     performanceScore: report.performanceScore,
     findings,
     reviewSummary,
-    explanations,
+    explanations
   };
 }
 
-/** Delete a report with ownership validation */
+/** Delete a report with ownership validation. */
 export async function deleteReport(reportId: string, userId?: string): Promise<boolean> {
-  try {
-    const where = userId ? { id: reportId, userId } : { id: reportId, userId: null };
+  const where = userId ? { id: reportId, userId } : { id: reportId, userId: null };
+  const existing = await prisma.report.findFirst({ where, select: { id: true } });
+  if (!existing) return false;
 
-    await prisma.report.delete({
-      where,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+  await prisma.report.delete({ where: { id: existing.id } });
+  return true;
 }
 
-/** Save or update a review summary for a report with ownership validation */
+/** Save or update a review summary for a report with ownership validation. */
 export async function saveReviewSummary(reportId: string, summary: ReviewSummary, userId?: string): Promise<void> {
-  // Verify ownership
-  if (userId) {
-    const report = await prisma.report.findFirst({
-      where: { id: reportId, userId },
-    });
-    if (!report) {
-      throw new Error("Report not found or access denied");
-    }
+  const report = await prisma.report.findFirst({
+    where: { id: reportId, ...(userId ? { userId } : {}) },
+    select: { id: true }
+  });
+  if (!report) {
+    throw new Error("Report not found or access denied");
   }
+
+  const data = {
+    summary: summary.summary,
+    keyRisks: JSON.stringify(summary.keyRisks),
+    priorities: JSON.stringify(summary.priorities),
+    caveats: summary.caveats
+  };
 
   await prisma.reviewSummary.upsert({
     where: { reportId },
-    update: {
-      summary: summary.summary,
-      keyRisks: summary.keyRisks,
-      priorities: summary.priorities,
-      caveats: summary.caveats,
-    },
-    create: {
-      reportId,
-      summary: summary.summary,
-      keyRisks: summary.keyRisks,
-      priorities: summary.priorities,
-      caveats: summary.caveats,
-    },
+    update: data,
+    create: { reportId, ...data }
   });
 }
 
-/** Save an explanation for a specific finding with ownership validation */
+/** Save an explanation for a specific finding with ownership validation. */
 export async function saveExplanation(
   reportId: string,
   finding: Finding,
   explanation: FindingExplanation,
   userId?: string
 ): Promise<void> {
-  // Verify ownership
-  if (userId) {
-    const report = await prisma.report.findFirst({
-      where: { id: reportId, userId },
-    });
-    if (!report) {
-      throw new Error("Report not found or access denied");
-    }
+  const report = await prisma.report.findFirst({
+    where: { id: reportId, ...(userId ? { userId } : {}) },
+    select: { id: true }
+  });
+  if (!report) {
+    throw new Error("Report not found or access denied");
   }
 
-  // Find the persisted finding that matches this finding's characteristics
   const persistedFinding = await prisma.finding.findFirst({
     where: {
       reportId,
@@ -248,33 +267,27 @@ export async function saveExplanation(
       severity: finding.severity,
       line: finding.line,
       ruleId: finding.ruleId,
-      message: finding.message,
-    },
+      message: finding.message
+    }
   });
 
   if (!persistedFinding) {
     throw new Error("Finding not found in report");
   }
 
-  // Upsert explanation (replace if exists)
   await prisma.explanation.upsert({
-    where: {
-      reportId_findingId: {
-        reportId,
-        findingId: persistedFinding.id,
-      },
-    },
+    where: { reportId_findingId: { reportId, findingId: persistedFinding.id } },
     update: {
       explanation: explanation.explanation,
       suggestedFix: explanation.suggestedFix,
-      caveats: explanation.caveats,
+      caveats: explanation.caveats
     },
     create: {
       reportId,
       findingId: persistedFinding.id,
       explanation: explanation.explanation,
       suggestedFix: explanation.suggestedFix,
-      caveats: explanation.caveats,
-    },
+      caveats: explanation.caveats
+    }
   });
 }

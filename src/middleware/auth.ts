@@ -1,137 +1,79 @@
 import type { Request, Response, NextFunction } from "express";
-import { WorkOS } from "@workos-inc/node";
-import { getUserByWorkosId } from "../services/userService";
+import { verifyJwt } from "../lib/jwt";
+import { env } from "../config/env";
+import { getUserById } from "../services/userService";
 
-const workos = new WorkOS(process.env.WORKOS_API_KEY);
-const clientId = process.env.WORKOS_CLIENT_ID!;
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string | null;
+  avatarUrl: string | null;
+  provider: string;
+  githubLogin: string | null;
+}
 
-// Extend Express Request to include authenticated user
 declare global {
   namespace Express {
     interface Request {
-      user?: {
-        id: string;
-        workosId: string;
-        email: string;
-        firstName?: string | null;
-        lastName?: string | null;
-        profileImage?: string | null;
-      };
+      user?: AuthUser;
     }
   }
 }
 
-/**
- * Authentication middleware
- * Validates session and attaches authenticated user to request
- */
-export async function requireAuth(
-  request: Request,
-  response: Response,
-  next: NextFunction
-): Promise<void> {
+/** Read the JWT from the Authorization header, falling back to the session cookie. */
+export function extractToken(request: Request): string | null {
+  const header = request.headers.authorization;
+  if (typeof header === "string" && header.toLowerCase().startsWith("bearer ")) {
+    const token = header.slice(7).trim();
+    if (token.length > 0) return token;
+  }
+
+  const cookie = request.cookies?.[env.cookieName];
+  return typeof cookie === "string" && cookie.length > 0 ? cookie : null;
+}
+
+async function resolveUser(request: Request): Promise<AuthUser | null> {
+  const token = extractToken(request);
+  if (!token) return null;
+
+  const payload = verifyJwt(token, env.jwtSecret);
+  if (!payload) return null;
+
+  const user = await getUserById(payload.sub);
+  if (!user) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatarUrl: user.avatarUrl,
+    provider: user.provider,
+    githubLogin: user.githubLogin
+  };
+}
+
+export async function requireAuth(request: Request, response: Response, next: NextFunction): Promise<void> {
   try {
-    // Get session cookie
-    const sessionCookie = request.cookies?.["wos-session"];
-
-    if (!sessionCookie) {
-      response.status(401).json({
-        success: false,
-        error: "Authentication required. Please sign in.",
-      });
-      return;
-    }
-
-    // Load and authenticate session using WorkOS
-    const session = workos.userManagement.loadSealedSession({
-      sessionData: sessionCookie,
-      cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
-    });
-
-    const authResult = await session.authenticate();
-
-    // Check if session is valid
-    if (!authResult.authenticated) {
-      response.status(401).json({
-        success: false,
-        error: "Invalid or expired session. Please sign in again.",
-      });
-      return;
-    }
-
-    // Get user from database
-    const user = await getUserByWorkosId(authResult.user.id);
-
+    const user = await resolveUser(request);
     if (!user) {
-      response.status(401).json({
-        success: false,
-        error: "User not found. Please sign in again.",
-      });
+      response.status(401).json({ success: false, error: "Authentication required. Please sign in." });
       return;
     }
 
-    // Attach user to request
-    request.user = {
-      id: user.id,
-      workosId: user.workosId,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImage: user.profileImage,
-    };
-
+    request.user = user;
     next();
   } catch (error) {
     console.error("Authentication error:", error);
-    response.status(401).json({
-      success: false,
-      error: "Authentication failed. Please sign in again.",
-    });
+    response.status(401).json({ success: false, error: "Authentication failed. Please sign in again." });
   }
 }
 
-/**
- * Optional authentication middleware
- * Attaches user if authenticated, but doesn't require it
- */
-export async function optionalAuth(
-  request: Request,
-  response: Response,
-  next: NextFunction
-): Promise<void> {
+export async function optionalAuth(request: Request, _response: Response, next: NextFunction): Promise<void> {
   try {
-    const sessionCookie = request.cookies?.["wos-session"];
-
-    if (!sessionCookie) {
-      next();
-      return;
-    }
-
-    const session = workos.userManagement.loadSealedSession({
-      sessionData: sessionCookie,
-      cookiePassword: process.env.WORKOS_COOKIE_PASSWORD!,
-    });
-
-    const authResult = await session.authenticate();
-
-    if (authResult.authenticated) {
-      const user = await getUserByWorkosId(authResult.user.id);
-      if (user) {
-        request.user = {
-          id: user.id,
-          workosId: user.workosId,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          profileImage: user.profileImage,
-        };
-      }
-    }
-
-    next();
+    const user = await resolveUser(request);
+    if (user) request.user = user;
   } catch (error) {
-    // Silent fail for optional auth
     console.error("Optional auth error:", error);
-    next();
   }
+  next();
 }

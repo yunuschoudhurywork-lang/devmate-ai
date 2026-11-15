@@ -1,30 +1,55 @@
-// Database schema for DevMate AI analysis reports and history
+// Database schema for DevMate AI: users, projects, reports and AI artifacts
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-// User model for WorkOS authentication
 model User {
   id           String   @id @default(uuid())
-  workosId     String   @unique  // Stable WorkOS user ID
   email        String   @unique
-  firstName    String?
-  lastName     String?
-  profileImage String?
+  passwordHash String?
+  name         String?
+  avatarUrl    String?
+  // "local" for email/password accounts, "github" for GitHub OAuth accounts
+  provider     String   @default("local")
+  githubId     String?  @unique
+  githubLogin  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Relations
+  reports   Report[]
+  projects  Project[]
+  artifacts AiArtifact[]
+
+  @@index([githubId])
+}
+
+model Project {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  repoUrl       String?
+  repoFullName  String?
+  // "github" | "manual"
+  provider      String   @default("manual")
+  defaultBranch String   @default("main")
+  language      String?
+  visibility    String   @default("private")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
   reports Report[]
 
-  @@index([workosId])
-  @@index([email])
+  @@unique([userId, repoFullName])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Report {
@@ -33,9 +58,13 @@ model Report {
   filename  String?
   createdAt DateTime @default(now())
 
-  // Owner relationship (nullable for legacy reports)
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Owner relationship (nullable for legacy anonymous reports)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Repository / project relationship
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   // Summary counts
   totalFindings    Int
@@ -50,22 +79,23 @@ model Report {
   securityScore    Int
   performanceScore Int
 
-  // Relations
   findings      Finding[]
   reviewSummary ReviewSummary?
   explanations  Explanation[]
+  artifacts     AiArtifact[]
 
   @@index([createdAt])
   @@index([userId])
+  @@index([projectId])
 }
 
 model Finding {
-  id         String  @id @default(uuid())
-  reportId   String
-  report     Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  reportId String
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
-  type       String  // "error" | "security" | "performance"
-  severity   String  // "low" | "medium" | "high" | "critical"
+  type       String
+  severity   String
   line       Int
   message    String
   ruleId     String
@@ -77,30 +107,52 @@ model Finding {
 }
 
 model ReviewSummary {
-  id         String   @id @default(uuid())
-  reportId   String   @unique
-  report     Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  reportId String @unique
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
 
-  summary    String
-  keyRisks   String[]
-  priorities String[]
+  summary String
+  // JSON-encoded string arrays (SQLite has no native array type)
+  keyRisks   String
+  priorities String
   caveats    String
   createdAt  DateTime @default(now())
 }
 
 model Explanation {
-  id           String   @id @default(uuid())
-  reportId     String
-  report       Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  findingId    String
-  finding      Finding  @relation(fields: [findingId], references: [id], onDelete: Cascade)
+  id       String @id @default(uuid())
+  reportId String
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  findingId String
+  finding   Finding @relation(fields: [findingId], references: [id], onDelete: Cascade)
 
   explanation  String
   suggestedFix String
   caveats      String
   createdAt    DateTime @default(now())
 
+  @@unique([reportId, findingId])
   @@index([reportId])
   @@index([findingId])
-  @@unique([reportId, findingId])
+}
+
+model AiArtifact {
+  id       String  @id @default(uuid())
+  userId   String
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportId String?
+  report   Report? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  // "review" | "pr-comments" | "security-fixes" | "refactor" | "bug-explanations"
+  kind     String
+  title    String
+  provider String
+  model    String
+  // JSON-encoded AI response payload
+  content  String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([reportId])
 }
