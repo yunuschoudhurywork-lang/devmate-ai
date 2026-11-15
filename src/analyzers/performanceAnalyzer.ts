@@ -1,23 +1,34 @@
 import type { Analyzer } from "./analyzer";
 import type { AnalysisInput, Finding } from "../types/analysis";
 
-const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
-const LOOP_PATTERN = /\b(?:for|while)\s*\([^)]*\)\s*\{/;
-const ARRAY_SEARCH_PATTERN = /\b[A-Za-z_$][\w$]*\s*\.\s*(?:find|includes|indexOf)\s*\(/;
-const DETERMINISTIC_CALL_PATTERN = /\b(?:Math\.(?:abs|ceil|floor|max|min|round)|JSON\.stringify|Object\.keys)\s*\([^;\n]+\)/g;
+const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript", "python", "java"]);
+const BRACE_LOOP_PATTERN = /\b(?:for|while)\s*\([^)]*\)\s*\{?/;
+const PYTHON_LOOP_PATTERN = /^\s*(?:for\s+[a-zA-Z_]\w*(?:\s*,\s*[a-zA-Z_]\w*)*\s+in\s+[^:]+|while\s+[^:]+)\s*:/;
+
+const SEARCH_PATTERN = /\b[A-Za-z_$][\w$]*\s*\.\s*(?:find|includes|indexOf|contains)\s*\(/;
+const DETERMINISTIC_CALL_PATTERN =
+  /\b(?:Math\.(?:abs|ceil|floor|max|min|round)|JSON\.stringify|Object\.keys|math\.(?:sqrt|floor|ceil|pow)|Math\.(?:sqrt|pow))\s*\([^;\n]+\)/g;
 
 interface LoopContext {
   endDepth: number;
   computations: Set<string>;
 }
 
-/** A small, conservative pattern matcher for common loop-related performance concerns. */
+/** A conservative pattern matcher for common loop-related performance concerns across JS, TS, Java, and Python. */
 export class PerformanceAnalyzer implements Analyzer {
   async analyze(input: AnalysisInput): Promise<Finding[]> {
     if (!SUPPORTED_LANGUAGES.has(input.language)) {
       return [];
     }
 
+    if (input.language === "python") {
+      return this.analyzePython(input);
+    }
+
+    return this.analyzeBraceLanguage(input);
+  }
+
+  private analyzeBraceLanguage(input: AnalysisInput): Promise<Finding[]> {
     const findings: Finding[] = [];
     const seen = new Set<string>();
     const loops: LoopContext[] = [];
@@ -33,7 +44,7 @@ export class PerformanceAnalyzer implements Analyzer {
         loops.pop();
       }
 
-      const isLoop = LOOP_PATTERN.test(code);
+      const isLoop = BRACE_LOOP_PATTERN.test(code);
       if (isLoop && loops.length > 0) {
         this.addFinding(findings, seen, index + 1, {
           ruleId: "performance-nested-loop",
@@ -43,11 +54,11 @@ export class PerformanceAnalyzer implements Analyzer {
         });
       }
 
-      if (loops.length > 0 && ARRAY_SEARCH_PATTERN.test(code)) {
+      if (loops.length > 0 && SEARCH_PATTERN.test(code)) {
         this.addFinding(findings, seen, index + 1, {
           ruleId: "performance-repeated-search",
           severity: "medium",
-          message: "Potential repeated array search inside a loop detected.",
+          message: "Potential repeated collection search inside a loop detected.",
           suggestion: "Consider precomputing a Set or Map outside the loop for repeated lookups."
         });
       }
@@ -75,7 +86,56 @@ export class PerformanceAnalyzer implements Analyzer {
       depth = Math.max(0, depth + braceDelta);
     });
 
-    return findings;
+    return Promise.resolve(findings);
+  }
+
+  private analyzePython(input: AnalysisInput): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    const seen = new Set<string>();
+    const loopIndents: number[] = [];
+
+    input.code.split(/\r?\n/).forEach((line, index) => {
+      const trimmed = line.trim();
+      if (trimmed.length === 0 || trimmed.startsWith("#")) {
+        return;
+      }
+
+      const indent = (line.match(/^[ \t]+/)?.[0] ?? "").replace(/\t/g, "    ").length;
+
+      while (loopIndents.length > 0 && indent <= loopIndents[loopIndents.length - 1]) {
+        loopIndents.pop();
+      }
+
+      const isLoop = PYTHON_LOOP_PATTERN.test(line);
+      if (isLoop) {
+        if (loopIndents.length > 0) {
+          this.addFinding(findings, seen, index + 1, {
+            ruleId: "performance-nested-loop",
+            severity: "medium",
+            message: "Potential nested-loop performance issue detected.",
+            suggestion: "Review whether the nested loop can be optimized with dict/set lookups or list comprehensions."
+          });
+        }
+        loopIndents.push(indent);
+        return;
+      }
+
+      if (loopIndents.length > 0) {
+        if (SEARCH_PATTERN.test(line) || /\bin\s+[a-zA-Z_]\w*\b/.test(line)) {
+          // If searching an array/list inside loop
+          if (SEARCH_PATTERN.test(line)) {
+            this.addFinding(findings, seen, index + 1, {
+              ruleId: "performance-repeated-search",
+              severity: "medium",
+              message: "Potential repeated collection search inside a loop detected.",
+              suggestion: "Consider precomputing a set or dict outside the loop for O(1) lookups."
+            });
+          }
+        }
+      }
+    });
+
+    return Promise.resolve(findings);
   }
 
   private addFinding(

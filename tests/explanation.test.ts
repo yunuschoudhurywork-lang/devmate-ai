@@ -47,7 +47,7 @@ describe("POST /api/explain", () => {
   it("rejects invalid requests before contacting the provider", async () => {
     const provider: ExplanationProvider = { generate: async () => { throw new Error("should not be called"); } };
 
-    const response = await request(apiWith(provider)).post("/api/explain").send({ language: "python", sourceContext: "x", finding: {} });
+    const response = await request(apiWith(provider)).post("/api/explain").send({ language: "ruby", sourceContext: "x", finding: {} });
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);

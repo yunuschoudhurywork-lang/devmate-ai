@@ -3,7 +3,7 @@ import { ExplanationNotConfiguredError, ExplanationProviderError, ExplanationSer
 import { saveExplanation } from "../db/reportRepository";
 import type { ExplanationInput, Finding, FindingType, Severity } from "../types/analysis";
 
-const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
+const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript", "python", "java"]);
 const FINDING_TYPES = new Set<FindingType>(["error", "security", "performance"]);
 const SEVERITIES = new Set<Severity>(["low", "medium", "high", "critical"]);
 const MAX_SOURCE_CONTEXT_LENGTH = 8_000;
@@ -62,7 +62,7 @@ function validateInput(body: unknown): ExplanationInput | Error {
   if (typeof body !== "object" || body === null) return new Error("A JSON explanation request is required.");
   const value = body as Partial<ExplanationInput>;
   const language = typeof value.language === "string" ? value.language.toLowerCase() : "";
-  if (!SUPPORTED_LANGUAGES.has(language)) return new Error("Unsupported language. Supported languages: javascript, typescript.");
+  if (!SUPPORTED_LANGUAGES.has(language)) return new Error("Unsupported language. Supported languages: javascript, typescript, python, java.");
   if (typeof value.sourceContext !== "string" || value.sourceContext.trim().length === 0) return new Error("'sourceContext' is required and must be a non-empty string.");
   if (value.sourceContext.length > MAX_SOURCE_CONTEXT_LENGTH) return new Error("'sourceContext' exceeds the 8000 character limit.");
   if (value.filename !== undefined && (typeof value.filename !== "string" || value.filename.length > MAX_FILENAME_LENGTH)) return new Error("'filename' must be a string up to 255 characters.");

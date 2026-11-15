@@ -1,6 +1,6 @@
 export type FindingType = "error" | "security" | "performance";
 export type Severity = "low" | "medium" | "high" | "critical";
-export type AnalysisLanguage = "javascript" | "typescript";
+export type AnalysisLanguage = "javascript" | "typescript" | "python" | "java";
 
 export interface Finding {
   type: FindingType;

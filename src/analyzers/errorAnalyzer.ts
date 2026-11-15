@@ -2,6 +2,8 @@ import { ESLint } from "eslint";
 import typescriptParser from "@typescript-eslint/parser";
 import type { Analyzer } from "./analyzer";
 import type { AnalysisInput, Finding, Severity } from "../types/analysis";
+import { PythonErrorAnalyzer } from "./pythonErrorAnalyzer";
+import { JavaErrorAnalyzer } from "./javaErrorAnalyzer";
 
 const LANGUAGE_EXTENSIONS: Record<string, string> = {
   javascript: ".js",
@@ -9,6 +11,9 @@ const LANGUAGE_EXTENSIONS: Record<string, string> = {
 };
 
 export class ErrorAnalyzer implements Analyzer {
+  private readonly pythonAnalyzer = new PythonErrorAnalyzer();
+  private readonly javaAnalyzer = new JavaErrorAnalyzer();
+
   private readonly eslint = new ESLint({
     overrideConfigFile: true,
     overrideConfig: [
@@ -38,6 +43,14 @@ export class ErrorAnalyzer implements Analyzer {
   });
 
   async analyze(input: AnalysisInput): Promise<Finding[]> {
+    if (input.language === "python") {
+      return this.pythonAnalyzer.analyze(input);
+    }
+
+    if (input.language === "java") {
+      return this.javaAnalyzer.analyze(input);
+    }
+
     const extension = LANGUAGE_EXTENSIONS[input.language];
     if (!extension) {
       return [];

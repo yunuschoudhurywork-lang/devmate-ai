@@ -8,6 +8,25 @@ import ReviewSummary from "@/components/ReviewSummary.vue";
 import { analyzeCode, generateReviewSummary, getProjects, ApiError } from "@/services/api";
 import type { AnalysisLanguage, AnalysisResult, Project, ReviewSummary as ReviewSummaryType } from "@/types/analysis";
 
+const DEFAULT_PRESETS: Record<AnalysisLanguage, { filename: string; code: string }> = {
+  javascript: {
+    filename: "example.js",
+    code: "const message = 'Hello, DevMate';\nconsole.log(message);"
+  },
+  typescript: {
+    filename: "example.ts",
+    code: "const message: string = 'Hello, DevMate';\nconsole.log(message);"
+  },
+  python: {
+    filename: "example.py",
+    code: "def main():\n    message = 'Hello, DevMate'\n    print(message)\n\nif __name__ == '__main__':\n    main()"
+  },
+  java: {
+    filename: "Example.java",
+    code: "public class Example {\n    public static void main(String[] args) {\n        String message = \"Hello, DevMate\";\n        System.out.println(message);\n    }\n}"
+  }
+};
+
 const props = defineProps<{ projectId?: string }>();
 
 const language = ref<AnalysisLanguage>("javascript");
@@ -23,8 +42,15 @@ const summaryLoading = ref(false);
 const error = ref("");
 const summaryError = ref("");
 
-watch(language, (value) => {
-  filename.value = value === "javascript" ? "example.js" : "example.ts";
+watch(language, (newLang, oldLang) => {
+  const oldPreset = oldLang ? DEFAULT_PRESETS[oldLang] : undefined;
+  const newPreset = DEFAULT_PRESETS[newLang];
+  if (!filename.value || (oldPreset && filename.value === oldPreset.filename)) {
+    filename.value = newPreset.filename;
+  }
+  if (!code.value.trim() || (oldPreset && code.value.trim() === oldPreset.code.trim())) {
+    code.value = newPreset.code;
+  }
 });
 
 watch(
@@ -96,6 +122,8 @@ async function requestReviewSummary(): Promise<void> {
           <select v-model="language">
             <option value="javascript">JavaScript</option>
             <option value="typescript">TypeScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
           </select>
         </label>
         <label>Filename <input v-model="filename" placeholder="example.js" /></label>

@@ -244,8 +244,103 @@ describe("DevMate AI API", () => {
     });
   });
 
+  it("analyzes valid Python", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "python",
+        code: "def greet(name):\n    message = f'Hello, {name}'\n    return message\n"
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.analysis.language).toBe("python");
+    expect(response.body.analysis.summary.errors).toBe(0);
+  });
+
+  it("reports Python syntax errors for missing colon and invalid literals", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "python",
+        code: "if x > 10\n    is_valid = true\n    count++\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("python-missing-colon");
+    expect(ruleIds).toContain("python-invalid-boolean-literal");
+    expect(ruleIds).toContain("python-invalid-increment");
+  });
+
+  it("reports Python security issues", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "python",
+        code: "import os\napi_key = \"sk-1234567890abcdef\"\nos.system('rm -rf /')\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("security-hardcoded-secret");
+    expect(ruleIds).toContain("security-command-exec");
+  });
+
+  it("reports Python nested loop performance issues", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "python",
+        code: "for i in range(10):\n    for j in range(10):\n        print(i, j)\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("performance-nested-loop");
+  });
+
+  it("analyzes valid Java", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "java",
+        code: "public class Main {\n    public static void main(String[] args) {\n        System.out.println(\"Hello\");\n    }\n}\n"
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.analysis.language).toBe("java");
+  });
+
+  it("reports Java errors for missing class, missing semicolon, and == on strings", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "java",
+        code: "int x = 5\nboolean isHello = name == \"hello\";\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("java-missing-class");
+    expect(ruleIds).toContain("java-missing-semicolon");
+    expect(ruleIds).toContain("java-string-equality-with-operator");
+  });
+
+  it("reports Java security command execution", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "java",
+        code: "public class Exec {\n    void run() throws Exception {\n        Runtime.getRuntime().exec(\"calc.exe\");\n    }\n}\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("security-command-exec");
+  });
+
   it("rejects unsupported languages", async () => {
-    const response = await request(app).post("/api/analyze").send({ language: "python", code: "print('hi')" });
+    const response = await request(app).post("/api/analyze").send({ language: "ruby", code: "puts 'hi'" });
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);

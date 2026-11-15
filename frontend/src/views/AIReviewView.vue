@@ -160,7 +160,7 @@ function useSample(): void {
               <option value="javascript">JavaScript</option>
               <option value="typescript">TypeScript</option>
               <option value="python">Python</option>
-              <option value="go">Go</option>
+              <option value="java">Java</option>
             </select>
           </label>
           <label>Filename <input v-model="filename" placeholder="example.js" /></label>

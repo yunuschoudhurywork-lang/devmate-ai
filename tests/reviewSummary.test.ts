@@ -107,7 +107,7 @@ describe("POST /api/review-summary", () => {
 
     const response = await request(apiWith(provider))
       .post("/api/review-summary")
-      .send({ language: "python", analysisResult: {} });
+      .send({ language: "ruby", analysisResult: {} });
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);

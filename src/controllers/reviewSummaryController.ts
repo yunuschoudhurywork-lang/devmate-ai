@@ -4,7 +4,7 @@ import { ReviewSummaryService, InvalidSummaryError } from "../services/reviewSum
 import { saveReviewSummary } from "../db/reportRepository";
 import type { ReviewSummaryInput, AnalysisResult } from "../types/analysis";
 
-const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
+const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript", "python", "java"]);
 const MAX_FILENAME_LENGTH = 255;
 const MAX_FINDINGS_COUNT = 200;
 const MAX_FINDING_MESSAGE_LENGTH = 2_000;
@@ -62,7 +62,7 @@ function validateInput(body: unknown): ReviewSummaryInput | Error {
   const language = typeof value.language === "string" ? value.language.toLowerCase() : "";
 
   if (!SUPPORTED_LANGUAGES.has(language)) {
-    return new Error("Unsupported language. Supported languages: javascript, typescript.");
+    return new Error("Unsupported language. Supported languages: javascript, typescript, python, java.");
   }
 
   if (value.filename !== undefined && (typeof value.filename !== "string" || value.filename.length > MAX_FILENAME_LENGTH)) {

@@ -3,7 +3,7 @@ import { AnalysisService } from "../services/analysisService";
 import { saveAnalysisReport } from "../db/reportRepository";
 import type { AnalysisInput } from "../types/analysis";
 
-const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript"]);
+const SUPPORTED_LANGUAGES = new Set(["javascript", "typescript", "python", "java"]);
 const analysisService = new AnalysisService();
 
 export async function analyzeCode(request: Request, response: Response): Promise<void> {
@@ -13,7 +13,7 @@ export async function analyzeCode(request: Request, response: Response): Promise
   if (!language || !SUPPORTED_LANGUAGES.has(language)) {
     response.status(400).json({
       success: false,
-      error: "Unsupported language. Supported languages: javascript, typescript."
+      error: "Unsupported language. Supported languages: javascript, typescript, python, java."
     });
     return;
   }
