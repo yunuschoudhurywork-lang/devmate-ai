@@ -45,6 +45,86 @@ function scoreClass(score: number): string {
     </div>
 
     <template v-else-if="data">
+      <!-- Retro Neo-Brutalist Hero Section (Inspired by Jellykit) -->
+      <section class="brutalist-hero">
+        <!-- Left Side: Massive Typography & Metric Bar -->
+        <div class="hero-left">
+          <div class="hero-eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span>DEVMATE · RUNS IN YOUR BROWSER</span>
+          </div>
+
+          <h1 class="hero-headline">
+            EVERYTHING<br />
+            YOU NEED.<br />
+            RIGHT IN YOUR<br />
+            <span class="headline-highlight-box">BROWSER.</span>
+          </h1>
+
+          <p class="hero-desc">
+            JavaScript. TypeScript. Python. Java. Code. <strong>All processed directly inside your browser</strong>, your code never leaves this device unless requested.
+          </p>
+
+          <div class="hero-metrics-bar">
+            <div class="metric-col">
+              <span class="m-label">ANALYSES</span>
+              <strong class="m-value">{{ data.stats.reports }}</strong>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-col">
+              <span class="m-label">PROJECTS</span>
+              <strong class="m-value">{{ data.stats.projects }}</strong>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-col">
+              <span class="m-label">AVG QUALITY</span>
+              <strong class="m-value" :class="scoreClass(data.stats.averageScore)">{{ data.stats.averageScore }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Side: Big Sunshine Yellow Card from screenshot -->
+        <div class="hero-right">
+          <div class="yellow-drop-card" @click="emit('navigate', 'analyze')">
+            <div class="drop-top-row">
+              <div class="square-plus-btn">+</div>
+              <span class="universal-drop-tag">UNIVERSAL DROP</span>
+            </div>
+
+            <div class="drop-center">
+              <h2 class="drop-title">DROP ANYTHING</h2>
+              <p class="drop-subtitle">We'll figure out what it is.</p>
+
+              <div class="format-pills">
+                <span class="f-pill">JS</span>
+                <span class="f-pill">TS</span>
+                <span class="f-pill">PYTHON</span>
+                <span class="f-pill">JAVA</span>
+                <span class="f-pill">LINTER</span>
+                <span class="f-pill">SECURITY</span>
+                <span class="f-pill">AI</span>
+              </div>
+            </div>
+
+            <div class="drop-actions">
+              <button class="btn-drop-dark" @click.stop="emit('navigate', 'analyze')">
+                Choose file
+              </button>
+              <button class="btn-drop-white" @click.stop="emit('navigate', 'analyze')">
+                <span>📋 Paste</span>
+                <span class="mini-keycap">Ctrl</span>
+                <span class="mini-keycap">V</span>
+              </button>
+            </div>
+
+            <div class="drop-footer">
+              <span class="footer-green-dot"></span>
+              <span>NOTHING LEAVES THIS DEVICE</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Kestra-inspired Pipeline Flow Banner -->
       <section class="pipeline-card">
         <header class="pipeline-header">
@@ -898,5 +978,474 @@ function scoreClass(score: number): string {
   border-color: rgba(168, 85, 247, 0.5);
   color: #ffffff;
   transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   Retro Neo-Brutalist Hero Styles (Inspired by Jellykit screenshot)
+   ========================================================================== */
+.brutalist-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(360px, 1fr);
+  gap: 2.5rem;
+  align-items: stretch;
+  margin-bottom: 2rem;
+}
+
+@media (max-width: 960px) {
+  .brutalist-hero {
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+  }
+}
+
+.hero-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+}
+
+.eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.7);
+}
+
+.hero-headline {
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-size: clamp(2.4rem, 4.4vw, 4.1rem);
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.headline-highlight-box {
+  background: #ffd738;
+  color: #000000;
+  border: 2.5px solid #000000;
+  padding: 0 0.3em;
+  box-shadow: 4px 4px 0px #000000;
+  display: inline-block;
+  transform: rotate(-0.5deg);
+}
+
+.hero-desc {
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: #cbd5e1;
+  margin: 0;
+  max-width: 580px;
+}
+
+.hero-desc strong {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.hero-metrics-bar {
+  display: flex;
+  align-items: stretch;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.12);
+  padding-top: 1.25rem;
+  gap: 1.75rem;
+}
+
+.metric-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.m-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.m-value {
+  font-family: var(--font-heading, sans-serif);
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #f8fafc;
+}
+
+.metric-divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.hero-right {
+  display: flex;
+}
+
+.yellow-drop-card {
+  width: 100%;
+  background: #ffd738;
+  border: 2.5px solid #000000;
+  border-radius: 14px;
+  box-shadow: 6px 6px 0px #000000;
+  padding: 2.2rem 2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.5rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  color: #000000;
+}
+
+.yellow-drop-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 8px 8px 0px #000000;
+}
+
+.drop-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.square-plus-btn {
+  width: 38px;
+  height: 38px;
+  border: 2px solid #000000;
+  background: #ffffff;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.universal-drop-tag {
+  border: 1.5px solid #000000;
+  border-radius: 5px;
+  padding: 0.2rem 0.6rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.drop-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.drop-title {
+  font-family: var(--font-display, 'Syne', sans-serif);
+  font-size: 2.4rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  margin: 0;
+  color: #000000;
+  text-transform: uppercase;
+}
+
+.drop-subtitle {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #18181b;
+  margin: 0;
+}
+
+.format-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+.f-pill {
+  background: #ffffff;
+  border: 1.5px solid #000000;
+  border-radius: 4px;
+  padding: 0.15rem 0.55rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #000000;
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.drop-actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.btn-drop-dark {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  font-weight: 800;
+  padding: 0.8rem 1.4rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.4);
+}
+
+.btn-drop-dark:hover {
+  background: #18181b;
+  transform: translateY(-1px);
+}
+
+.btn-drop-white {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 8px;
+  font-weight: 800;
+  padding: 0.8rem 1.25rem;
+  font-size: 0.92rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+.btn-drop-white:hover {
+  background: #f4f4f5;
+  transform: translateY(-1px);
+}
+
+.mini-keycap {
+  background: #e4e4e7;
+  border: 1px solid #000000;
+  border-radius: 3px;
+  padding: 0.05rem 0.3rem;
+  font-size: 0.65rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 800;
+}
+
+.drop-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #18181b;
+}
+
+.footer-green-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 1px solid #000000;
+}
+
+/* ==========================================================================
+   Light Mode Overrides for Dashboard (Retro Warm Cream & Neo-Brutalist)
+   ========================================================================== */
+:global(body.light-theme) .hero-headline {
+  color: #000000;
+}
+
+:global(body.light-theme) .hero-eyebrow {
+  color: #52525b;
+}
+
+:global(body.light-theme) .hero-desc {
+  color: #27272a;
+}
+
+:global(body.light-theme) .hero-desc strong {
+  color: #000000;
+}
+
+:global(body.light-theme) .hero-metrics-bar {
+  border-top: 2px solid #000000;
+}
+
+:global(body.light-theme) .metric-divider {
+  background: #000000;
+}
+
+:global(body.light-theme) .m-label {
+  color: #52525b;
+}
+
+:global(body.light-theme) .m-value {
+  color: #000000;
+}
+
+:global(body.light-theme) .stat-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+:global(body.light-theme) .stat-card .stat-label {
+  color: #52525b;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+:global(body.light-theme) .stat-card strong {
+  color: #000000;
+}
+
+:global(body.light-theme) .stat-card small {
+  color: #71717a;
+}
+
+:global(body.light-theme) .panel {
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+:global(body.light-theme) .panel-header h2 {
+  color: #000000;
+  font-family: var(--font-heading, sans-serif);
+  font-weight: 800;
+}
+
+:global(body.light-theme) .pipeline-card {
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+:global(body.light-theme) .pipeline-path {
+  color: #000000;
+}
+
+:global(body.light-theme) .sparkle {
+  color: #000000;
+}
+
+:global(body.light-theme) .flow-step {
+  background: #fdfcfa;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  color: #000000;
+}
+
+:global(body.light-theme) .flow-step strong {
+  color: #000000;
+}
+
+:global(body.light-theme) .flow-step small {
+  color: #52525b;
+}
+
+:global(body.light-theme) .flow-step.active-step {
+  background: #ffd738;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+:global(body.light-theme) .step-tag.active-tag {
+  background: #000000;
+  color: #ffffff;
+}
+
+:global(body.light-theme) .badge-pill {
+  background: #f4f0ea;
+  border: 1.5px solid #000000;
+  color: #000000;
+  font-weight: 700;
+}
+
+:global(body.light-theme) .badge-pill.active-pill {
+  background: #ffd738;
+  border: 1.5px solid #000000;
+  color: #000000;
+}
+
+:global(body.light-theme) .recent-item {
+  background: #ffffff;
+  border: 1.5px solid #000000;
+  color: #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+:global(body.light-theme) .recent-item strong {
+  color: #000000;
+}
+
+:global(body.light-theme) .recent-item small {
+  color: #52525b;
+}
+
+:global(body.light-theme) .artifact-row {
+  background: #ffffff;
+  border: 1.5px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+:global(body.light-theme) .artifact-row strong {
+  color: #000000;
+}
+
+:global(body.light-theme) .artifact-row small {
+  color: #52525b;
+}
+
+:global(body.light-theme) .cosmic-horizon {
+  background: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 4px 4px 0px #000000;
+}
+
+:global(body.light-theme) .horizon-heading {
+  color: #000000;
+  font-family: var(--font-heading, sans-serif);
+  font-weight: 800;
+}
+
+:global(body.light-theme) .horizon-desc {
+  color: #52525b;
+}
+
+:global(body.light-theme) .cosmic-horizon .primary {
+  background: #ffd738;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 3px 3px 0px #000000;
+  font-weight: 800;
+}
+
+:global(body.light-theme) .cosmic-horizon .secondary {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px #000000;
+  font-weight: 700;
 }
 </style>

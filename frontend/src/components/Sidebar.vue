@@ -213,4 +213,88 @@ function handleSignOut(): void {
   margin-top: auto;
 }
 .footer-note { color: #64748b; font-size: 0.7rem; }
+
+/* Light Theme Overrides (Warm Cream & Bold Ink) */
+:global(body.light-theme) .sidebar {
+  background: #f8f6f0;
+  border-right: 2px solid #000000;
+}
+
+:global(body.light-theme) .brand-mark {
+  color: #000000;
+  filter: none;
+}
+
+:global(body.light-theme) .brand-text strong {
+  color: #000000;
+  font-family: var(--font-heading, sans-serif);
+  font-weight: 800;
+}
+
+:global(body.light-theme) .toggle-btn {
+  background: #ffffff;
+  border: 2px solid #000000;
+  color: #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+:global(body.light-theme) .toggle-btn:hover {
+  background: #ffd738;
+  box-shadow: 3px 3px 0px #000000;
+}
+
+:global(body.light-theme) .user-avatar {
+  background: #ffd738;
+  border: 2px solid #000000;
+  color: #000000;
+  box-shadow: 2px 2px 0px #000000;
+}
+
+:global(body.light-theme) .user-name {
+  color: #000000;
+  font-weight: 700;
+}
+
+:global(body.light-theme) .user-email {
+  color: #52525b;
+}
+
+:global(body.light-theme) .btn-sign-out {
+  background: #ffffff;
+  border: 1.5px solid #000000;
+  color: #000000;
+  box-shadow: 1px 1px 0px #000000;
+  font-weight: 600;
+}
+
+:global(body.light-theme) .btn-sign-out:hover {
+  background: #fee2e2;
+}
+
+:global(body.light-theme) .nav-item {
+  color: #18181b;
+  font-weight: 600;
+}
+
+:global(body.light-theme) .nav-item:hover {
+  background: #f1eee7;
+  color: #000000;
+}
+
+:global(body.light-theme) .nav-item.active {
+  background: #000000;
+  color: #ffffff;
+  font-weight: 800;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+}
+
+:global(body.light-theme) .sidebar-footer {
+  border-top: 1.5px solid #000000;
+}
+
+:global(body.light-theme) .footer-note {
+  color: #52525b;
+  font-weight: 600;
+}
 </style>

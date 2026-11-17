@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as monaco from "monaco-editor";
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useTheme } from "@/composables/useTheme";
 import type { AnalysisLanguage, Finding } from "@/types/analysis";
 
 const props = defineProps<{
@@ -11,6 +12,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{ "update:modelValue": [value: string] }>();
 
+const { isDark } = useTheme();
 const container = ref<HTMLElement>();
 let editor: monaco.editor.IStandaloneCodeEditor | undefined;
 
@@ -68,7 +70,7 @@ onMounted(() => {
   editor = monaco.editor.create(container.value, {
     value: props.modelValue,
     language: props.language,
-    theme: "vs-dark",
+    theme: isDark.value ? "vs-dark" : "vs",
     automaticLayout: true,
     minimap: { enabled: true, maxColumn: 40 },
     fontSize: 14,
@@ -85,6 +87,13 @@ onMounted(() => {
 
   updateMarkers();
 });
+
+watch(
+  isDark,
+  (dark) => {
+    monaco.editor.setTheme(dark ? "vs-dark" : "vs");
+  }
+);
 
 watch(
   () => props.language,
