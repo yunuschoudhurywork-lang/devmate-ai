@@ -11,5 +11,15 @@ describe("QualityScore", () => {
     expect(wrapper.text()).toContain("84");
     expect(wrapper.text()).toContain("70");
     expect(wrapper.text()).toContain("94");
+    expect(wrapper.text()).toContain("Audit Scope & Confidence");
+  });
+
+  it("renders clean status pills when security is 100", () => {
+    const wrapper = mount(QualityScore, { props: { quality: { overall: 100, categories: { correctness: 100, security: 100, performance: 100 } } } });
+
+    expect(wrapper.text()).toContain("Clean (0 detected)");
+    expect(wrapper.text()).toContain("Passing");
+    expect(wrapper.text()).toContain("Optimal");
+    expect(wrapper.text()).toContain("zero detected pattern violations");
   });
 });
