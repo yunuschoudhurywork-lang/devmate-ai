@@ -7,7 +7,7 @@ const DEFAULT_MODELS: Record<AiProviderName, string> = {
   openai: "gpt-4o-mini",
   "azure-openai": "gpt-4o-mini",
   anthropic: "claude-3-5-sonnet-latest",
-  gemini: "gemini-2.0-flash"
+  gemini: "gemini-3.5-flash-lite"
 };
 
 function read(name: string): string | undefined {
