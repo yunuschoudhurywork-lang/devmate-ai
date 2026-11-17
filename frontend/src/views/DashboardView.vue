@@ -222,7 +222,7 @@ function scoreClass(score: number): string {
         <article class="panel">
           <header class="panel-header">
             <h2>Recent AI artifacts</h2>
-            <button class="link-button" @click="emit('navigate', 'ai')">Open AI review →</button>
+            <button class="link-button" @click="emit('navigate', 'analyze')">Analyze code →</button>
           </header>
           <p v-if="data.recentArtifacts.length === 0" class="muted">No AI artifacts yet.</p>
           <div class="recent-list">
