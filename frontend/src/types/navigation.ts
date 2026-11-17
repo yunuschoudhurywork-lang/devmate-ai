@@ -1,4 +1,4 @@
-export type ViewId = "dashboard" | "analyze" | "history" | "repositories" | "ai" | "settings";
+export type ViewId = "dashboard" | "analyze" | "history" | "repositories" | "ai" | "settings" | "contact";
 
 export const VIEW_TITLES: Record<ViewId, { title: string; subtitle: string }> = {
   dashboard: {
@@ -24,5 +24,9 @@ export const VIEW_TITLES: Record<ViewId, { title: string; subtitle: string }> = 
   settings: {
     title: "Settings",
     subtitle: "Manage your profile, password and account"
+  },
+  contact: {
+    title: "Contact & Support",
+    subtitle: "Connect with us on X, reach out directly, report issues, or suggest new tools"
   }
 };

@@ -8,6 +8,7 @@ import HistoryView from "@/views/HistoryView.vue";
 import RepositoriesView from "@/views/RepositoriesView.vue";
 import AiReviewView from "@/views/AIReviewView.vue";
 import SettingsView from "@/views/SettingsView.vue";
+import ContactView from "@/views/ContactView.vue";
 import { useAuth } from "@/composables/useAuth";
 import { VIEW_TITLES, type ViewId } from "@/types/navigation";
 
@@ -87,6 +88,7 @@ onMounted(async () => {
         />
         <AiReviewView v-else-if="currentView === 'ai'" />
         <SettingsView v-else-if="currentView === 'settings'" />
+        <ContactView v-else-if="currentView === 'contact'" />
       </div>
     </main>
   </div>
