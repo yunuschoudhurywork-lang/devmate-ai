@@ -318,6 +318,10 @@ body.light-theme .top-right-btn:hover {
   background: radial-gradient(ellipse at 50% 20%, rgba(124, 58, 237, 0.22) 0%, #06040b 70%);
 }
 
+body.light-theme .auth-shell {
+  background: #f4f0ea;
+}
+
 .app-container {
   display: flex;
   min-height: 100vh;
