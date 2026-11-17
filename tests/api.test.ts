@@ -272,6 +272,20 @@ describe("DevMate AI API", () => {
     expect(ruleIds).toContain("python-invalid-increment");
   });
 
+  it("reports Python undefined and unused variables", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "python",
+        code: "def process_data(items):\n    unused_result = 42\n    total = calculate_sum(items)\n    return total\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("python-no-undef");
+    expect(ruleIds).toContain("python-unused-variable");
+  });
+
   it("reports Python security issues", async () => {
     const response = await request(app)
       .post("/api/analyze")
@@ -324,6 +338,20 @@ describe("DevMate AI API", () => {
     expect(ruleIds).toContain("java-missing-class");
     expect(ruleIds).toContain("java-missing-semicolon");
     expect(ruleIds).toContain("java-string-equality-with-operator");
+  });
+
+  it("reports Java undefined and unused variables", async () => {
+    const response = await request(app)
+      .post("/api/analyze")
+      .send({
+        language: "java",
+        code: "public class Test {\n    public void run() {\n        int unusedValue = 100;\n        System.out.println(unknownVariable);\n    }\n}\n"
+      });
+
+    expect(response.status).toBe(200);
+    const ruleIds = response.body.analysis.findings.map((f: { ruleId: string }) => f.ruleId);
+    expect(ruleIds).toContain("java-no-undef");
+    expect(ruleIds).toContain("java-unused-variable");
   });
 
   it("reports Java security command execution", async () => {
