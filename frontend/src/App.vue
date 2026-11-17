@@ -6,7 +6,6 @@ import DashboardView from "@/views/DashboardView.vue";
 import AnalyzeView from "@/views/AnalyzeView.vue";
 import HistoryView from "@/views/HistoryView.vue";
 import RepositoriesView from "@/views/RepositoriesView.vue";
-import AiReviewView from "@/views/AIReviewView.vue";
 import SettingsView from "@/views/SettingsView.vue";
 import ContactView from "@/views/ContactView.vue";
 import { useAuth } from "@/composables/useAuth";
@@ -86,7 +85,6 @@ onMounted(async () => {
           v-else-if="currentView === 'repositories'"
           @analyze-project="analyzeProject"
         />
-        <AiReviewView v-else-if="currentView === 'ai'" />
         <SettingsView v-else-if="currentView === 'settings'" />
         <ContactView v-else-if="currentView === 'contact'" />
       </div>

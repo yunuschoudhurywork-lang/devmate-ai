@@ -14,7 +14,6 @@ const items: Array<{ id: ViewId; label: string; icon: string }> = [
   { id: "analyze", label: "Analyze", icon: "🔍" },
   { id: "history", label: "History", icon: "📋" },
   { id: "repositories", label: "Repositories", icon: "🗂" },
-  { id: "ai", label: "AI Review", icon: "🤖" },
   { id: "settings", label: "Settings", icon: "⚙️" },
   { id: "contact", label: "Contact", icon: "💬" }
 ];

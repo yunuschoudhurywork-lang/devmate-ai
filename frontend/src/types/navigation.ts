@@ -1,4 +1,4 @@
-export type ViewId = "dashboard" | "analyze" | "history" | "repositories" | "ai" | "settings" | "contact";
+export type ViewId = "dashboard" | "analyze" | "history" | "repositories" | "settings" | "contact";
 
 export const VIEW_TITLES: Record<ViewId, { title: string; subtitle: string }> = {
   dashboard: {
@@ -16,10 +16,6 @@ export const VIEW_TITLES: Record<ViewId, { title: string; subtitle: string }> = 
   repositories: {
     title: "Repositories",
     subtitle: "Organise projects and track their quality over time"
-  },
-  ai: {
-    title: "AI Review",
-    subtitle: "Human-like reviews, PR comments, security fixes and refactoring plans"
   },
   settings: {
     title: "Settings",
