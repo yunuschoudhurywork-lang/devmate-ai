@@ -96,9 +96,9 @@ onMounted(async () => {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-  background: #0b0c0e;
-  color: #e2e8f0;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #06040b;
+  color: #f8fafc;
 }
 
 .splash {
@@ -107,13 +107,25 @@ body {
   place-content: center;
   gap: 0.75rem;
   text-align: center;
-  color: #94a3b8;
+  color: #a5b4fc;
+  background: #06040b;
 }
-.splash-mark { color: #fbbf24; font-size: 2.5rem; }
+.splash-mark {
+  color: #a855f7;
+  font-size: 2.5rem;
+  filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.7));
+}
 
-.auth-shell { min-height: 100vh; background: radial-gradient(circle at 20% 0%, #1f2530 0%, #0b0c0e 55%); }
+.auth-shell {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 20%, rgba(124, 58, 237, 0.22) 0%, #06040b 70%);
+}
 
-.app-container { display: flex; min-height: 100vh; background: #0b0c0e; }
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  background: #06040b;
+}
 
 .main-content {
   flex: 1;
@@ -121,19 +133,28 @@ body {
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #0b0c0e 0%, #2a2d35 100%);
+  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+              radial-gradient(ellipse 90% 40% at 50% 115%, rgba(124, 58, 237, 0.2) 0%, transparent 60%),
+              #07040e;
   min-width: 0;
+  min-height: 100vh;
 }
 .app-container:has(.sidebar.collapsed) .main-content { margin-left: 70px; }
 
 header {
-  background: rgba(42, 45, 53, 0.5);
-  border-bottom: 1px solid #3a3d45;
+  background: rgba(10, 7, 18, 0.75);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.15);
   padding: 1.75rem 2.5rem;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(16px);
 }
-.header-content h1 { color: white; font-size: 1.6rem; font-weight: 600; margin-bottom: 0.4rem; }
-.subtitle { color: #9ca3af; font-size: 0.9rem; }
+.header-content h1 {
+  color: #ffffff;
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  letter-spacing: -0.01em;
+}
+.subtitle { color: #94a3b8; font-size: 0.9rem; }
 
 .view-container { flex: 1; overflow: auto; }
 
