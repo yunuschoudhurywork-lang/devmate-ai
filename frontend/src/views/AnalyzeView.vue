@@ -29,6 +29,7 @@ const DEFAULT_PRESETS: Record<AnalysisLanguage, { filename: string; code: string
 
 const props = defineProps<{ projectId?: string }>();
 
+const editorRef = ref<InstanceType<typeof CodeEditor>>();
 const language = ref<AnalysisLanguage>("javascript");
 const filename = ref("example.js");
 const code = ref("const message = 'Hello, DevMate';\nconsole.log(message);");
@@ -68,6 +69,10 @@ onMounted(async () => {
   }
 });
 
+function onSelectLine(line: number): void {
+  editorRef.value?.goToLine(line);
+}
+
 async function runAnalysis(): Promise<void> {
   loading.value = true;
   error.value = "";
@@ -76,24 +81,25 @@ async function runAnalysis(): Promise<void> {
   reportId.value = undefined;
 
   try {
-    const result = await analyzeCode({
+    const response = await analyzeCode({
       language: language.value,
       filename: filename.value || undefined,
       code: code.value,
       projectId: selectedProjectId.value || undefined
     });
-    analysis.value = result.analysis;
-    reportId.value = result.reportId;
+    analysis.value = response.analysis;
+    reportId.value = response.reportId;
   } catch (caught) {
     analysis.value = undefined;
-    error.value = caught instanceof ApiError ? caught.message : "An unexpected error occurred while requesting analysis.";
+    error.value = caught instanceof ApiError ? caught.message : "An unexpected error occurred during analysis.";
   } finally {
     loading.value = false;
   }
 }
 
 async function requestReviewSummary(): Promise<void> {
-  if (!analysis.value || summaryLoading.value) return;
+  if (!analysis.value) return;
+
   summaryLoading.value = true;
   summaryError.value = "";
 
@@ -118,7 +124,8 @@ async function requestReviewSummary(): Promise<void> {
   <main class="workspace">
     <section class="editor-panel">
       <div class="toolbar">
-        <label>Language
+        <label>
+          <span>Language</span>
           <select v-model="language">
             <option value="javascript">JavaScript</option>
             <option value="typescript">TypeScript</option>
@@ -126,19 +133,32 @@ async function requestReviewSummary(): Promise<void> {
             <option value="java">Java</option>
           </select>
         </label>
-        <label>Filename <input v-model="filename" placeholder="example.js" /></label>
-        <label>Project
+        <label>
+          <span>Filename</span>
+          <input v-model="filename" placeholder="example.js" />
+        </label>
+        <label>
+          <span>Project</span>
           <select v-model="selectedProjectId">
             <option value="">No project</option>
             <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
           </select>
         </label>
-        <button :disabled="loading" @click="runAnalysis">{{ loading ? "Analyzing…" : "Analyze code" }}</button>
+        <button class="btn-analyze" :disabled="loading" @click="runAnalysis">
+          <span class="btn-icon">⚡</span>
+          <span>{{ loading ? "Analyzing…" : "Analyze code" }}</span>
+        </button>
       </div>
 
-      <CodeEditor v-model="code" :language="language" />
+      <CodeEditor
+        ref="editorRef"
+        v-model="code"
+        :language="language"
+        :findings="analysis?.findings ?? []"
+      />
+
       <p v-if="error" class="error" role="alert">{{ error }}</p>
-      <p v-if="reportId" class="saved">✓ Saved to your history.</p>
+      <p v-if="reportId" class="saved">✓ Analysis saved to your history.</p>
     </section>
 
     <aside class="results-panel">
@@ -147,7 +167,8 @@ async function requestReviewSummary(): Promise<void> {
         <AnalysisSummary :summary="analysis.summary" />
         <div class="summary-section">
           <button class="summary-button" :disabled="summaryLoading" @click="requestReviewSummary">
-            {{ summaryLoading ? "Generating…" : "🤖 Generate AI Review Summary" }}
+            <span>✨</span>
+            <span>{{ summaryLoading ? "Generating AI Summary…" : "🤖 Generate AI Review Summary" }}</span>
           </button>
           <p v-if="summaryError" class="error" role="alert">{{ summaryError }}</p>
         </div>
@@ -161,23 +182,155 @@ async function requestReviewSummary(): Promise<void> {
         :filename="filename"
         :source-context="code"
         :report-id="reportId"
+        @select-line="onSelectLine"
       />
     </aside>
   </main>
 </template>
 
 <style scoped>
-.workspace { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.8fr); gap: 1.25rem; }
-.editor-panel, .results-panel { min-width: 0; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: end; margin-bottom: 0.75rem; }
-label { display: grid; color: #94a3b8; font-size: 0.8rem; gap: 0.25rem; }
-input, select { background: #172033; border: 1px solid #334155; border-radius: 6px; color: #f8fafc; padding: 0.5rem; }
-button { background: #0284c7; border: 0; border-radius: 6px; color: white; cursor: pointer; font-weight: 700; padding: 0.62rem 0.9rem; }
-button:disabled { cursor: wait; opacity: 0.7; }
-.results-panel { display: grid; align-content: start; gap: 1rem; }
-.error { color: #fca5a5; }
-.saved { color: #86efac; font-size: 0.8rem; margin-top: 0.5rem; }
-.summary-section { display: grid; gap: 0.5rem; }
-.summary-button { background: #0e7490; font-size: 0.9rem; }
-@media (max-width: 850px) { .workspace { grid-template-columns: 1fr; } }
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(360px, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.editor-panel, .results-panel {
+  min-width: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  align-items: flex-end;
+  margin-bottom: 0.85rem;
+  background: rgba(16, 11, 29, 0.7);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  backdrop-filter: blur(14px);
+}
+
+label {
+  display: grid;
+  color: #a5b4fc;
+  font-size: 0.78rem;
+  gap: 0.3rem;
+  font-weight: 500;
+}
+
+input, select {
+  background: rgba(10, 7, 20, 0.85);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 8px;
+  color: #f8fafc;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+input:focus, select:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+}
+
+.btn-analyze {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+  border: 1px solid rgba(168, 85, 247, 0.5);
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0.65rem 1.15rem;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.btn-analyze:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.7);
+  transform: translateY(-1px);
+}
+
+.btn-analyze:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.btn-icon {
+  font-size: 0.9rem;
+}
+
+.results-panel {
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+
+.error {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.85rem;
+  margin-top: 0.6rem;
+}
+
+.saved {
+  color: #34d399;
+  font-size: 0.82rem;
+  margin-top: 0.6rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.summary-section {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.summary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  border-radius: 10px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  box-shadow: 0 0 16px rgba(147, 51, 234, 0.35);
+  transition: all 0.2s ease;
+}
+
+.summary-button:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.65);
+  transform: translateY(-1px);
+}
+
+.summary-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 960px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+  }
+}
 </style>
