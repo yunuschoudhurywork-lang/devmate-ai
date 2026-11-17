@@ -91,8 +91,8 @@ function handleSignOut(): void {
   left: 0;
   top: 0;
   height: 100vh;
-  background: linear-gradient(180deg, #0b0c0e 0%, #2a2d35 100%);
-  border-right: 1px solid #3a3d45;
+  background: linear-gradient(180deg, #090614 0%, #0d081c 100%);
+  border-right: 1px solid rgba(139, 92, 246, 0.15);
   display: flex;
   flex-direction: column;
   width: 260px;
@@ -107,24 +107,34 @@ function handleSignOut(): void {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: #fbbf24;
-  border: 2px solid #0b0c0e;
-  color: #000;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  border: 2px solid #06040b;
+  color: #fff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
   font-weight: 700;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
 }
-.toggle-btn:hover { background: #fcd34d; transform: scale(1.1); }
+.toggle-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.8);
+}
 .toggle-icon { font-size: 10px; }
 .sidebar-content { display: flex; flex-direction: column; height: 100%; padding: 1.5rem 0; overflow: hidden; }
 
 .brand { display: flex; align-items: center; gap: 0.75rem; padding: 0 1.5rem; margin-bottom: 1.75rem; }
 .collapsed .brand { justify-content: center; padding: 0; }
-.brand-mark { font-size: 1.5rem; color: #fbbf24; flex-shrink: 0; }
-.brand-text strong { color: white; font-size: 1.1rem; }
+.brand-mark {
+  font-size: 1.5rem;
+  color: #c084fc;
+  filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.7));
+  flex-shrink: 0;
+}
+.brand-text strong { color: white; font-size: 1.1rem; letter-spacing: -0.01em; }
 
 .user-section { padding: 0 1.25rem; margin-bottom: 1.75rem; }
 .collapsed .user-section { padding: 0 0.75rem; }
@@ -135,30 +145,36 @@ function handleSignOut(): void {
   height: 40px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 2px solid #fbbf24;
-  background: #1f2530;
-  color: #fbbf24;
+  border: 2px solid #7c3aed;
+  background: rgba(124, 58, 237, 0.2);
+  color: #c4b5fd;
   display: grid;
   place-items: center;
   font-weight: 700;
   font-size: 0.85rem;
   overflow: hidden;
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
 }
 .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .user-details { display: flex; flex-direction: column; gap: 0.2rem; overflow: hidden; }
 .user-name { color: white; font-weight: 600; font-size: 0.88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.user-email { color: #9ca3af; font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-email { color: #94a3b8; font-size: 0.72rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .btn-sign-out {
   margin-top: 0.45rem;
   padding: 0.35rem 0.7rem;
-  background: transparent;
-  border: 1px solid #4b5563;
-  border-radius: 4px;
-  color: #d1d5db;
+  background: rgba(124, 58, 237, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.25);
+  border-radius: 6px;
+  color: #c4b5fd;
   font-size: 0.72rem;
   cursor: pointer;
+  transition: all 0.15s;
 }
-.btn-sign-out:hover { background: #2a2d35; border-color: #6b7280; }
+.btn-sign-out:hover {
+  background: rgba(124, 58, 237, 0.25);
+  border-color: rgba(168, 85, 247, 0.5);
+  color: #ffffff;
+}
 .btn-sign-out:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .nav-menu { display: flex; flex-direction: column; gap: 0.35rem; padding: 0 1rem; flex: 1; }
@@ -171,18 +187,30 @@ function handleSignOut(): void {
   background: transparent;
   border: none;
   border-radius: 8px;
-  color: #d1d5db;
+  color: #cbd5e1;
   cursor: pointer;
   transition: all 0.15s;
   text-align: left;
   width: 100%;
 }
 .collapsed .nav-item { justify-content: center; padding: 0.8rem; }
-.nav-item:hover { background: rgba(42, 45, 53, 0.7); }
-.nav-item.active { background: #fbbf24; color: #000; font-weight: 600; }
+.nav-item:hover {
+  background: rgba(139, 92, 246, 0.12);
+  color: #ffffff;
+}
+.nav-item.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.35);
+}
 .nav-icon { font-size: 1.05rem; flex-shrink: 0; }
 .nav-label { font-weight: 500; white-space: nowrap; font-size: 0.9rem; }
 
-.sidebar-footer { padding: 1rem 1.25rem 0; border-top: 1px solid #3a3d45; margin-top: auto; }
+.sidebar-footer {
+  padding: 1rem 1.25rem 0;
+  border-top: 1px solid rgba(139, 92, 246, 0.15);
+  margin-top: auto;
+}
 .footer-note { color: #64748b; font-size: 0.7rem; }
 </style>
