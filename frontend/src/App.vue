@@ -10,10 +10,17 @@ import SettingsView from "@/views/SettingsView.vue";
 import ContactView from "@/views/ContactView.vue";
 import { useAuth } from "@/composables/useAuth";
 import { useTheme } from "@/composables/useTheme";
+import type { AnalysisLanguage } from "@/types/analysis";
 import { VIEW_TITLES, type ViewId } from "@/types/navigation";
 
 const currentView = ref<ViewId>("dashboard");
 const selectedProjectId = ref<string | undefined>(undefined);
+const pendingAnalysisData = ref<{
+  code: string;
+  filename?: string;
+  language?: AnalysisLanguage;
+} | null>(null);
+
 const { user, isLoading, restoreSession, checkAuthError, clearAuthError } = useAuth();
 const { isDark, toggleTheme } = useTheme();
 const authErrorMessage = ref<string | null>(null);
@@ -22,6 +29,15 @@ const heading = computed(() => VIEW_TITLES[currentView.value]);
 
 function navigate(view: ViewId): void {
   currentView.value = view;
+}
+
+function handleAnalyzeCode(payload: {
+  code: string;
+  filename?: string;
+  language?: AnalysisLanguage;
+}): void {
+  pendingAnalysisData.value = { ...payload };
+  currentView.value = "analyze";
 }
 
 function analyzeProject(projectId: string): void {
@@ -35,8 +51,10 @@ onMounted(async () => {
       e.preventDefault();
       navigate("analyze");
     } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "o") {
-      e.preventDefault();
-      navigate("analyze");
+      if (currentView.value !== "dashboard") {
+        e.preventDefault();
+        navigate("analyze");
+      }
     }
   });
 
@@ -119,8 +137,18 @@ onMounted(async () => {
       </header>
 
       <div class="view-container">
-        <DashboardView v-if="currentView === 'dashboard'" @navigate="navigate" />
-        <AnalyzeView v-else-if="currentView === 'analyze'" :project-id="selectedProjectId" />
+        <DashboardView
+          v-if="currentView === 'dashboard'"
+          @navigate="navigate"
+          @analyze-code="handleAnalyzeCode"
+        />
+        <AnalyzeView
+          v-else-if="currentView === 'analyze'"
+          :project-id="selectedProjectId"
+          :initial-code="pendingAnalysisData?.code"
+          :initial-filename="pendingAnalysisData?.filename"
+          :initial-language="pendingAnalysisData?.language"
+        />
         <HistoryView v-else-if="currentView === 'history'" @back-to-analyze="navigate('analyze')" />
         <RepositoriesView
           v-else-if="currentView === 'repositories'"
