@@ -27,12 +27,17 @@ const DEFAULT_PRESETS: Record<AnalysisLanguage, { filename: string; code: string
   }
 };
 
-const props = defineProps<{ projectId?: string }>();
+const props = defineProps<{
+  projectId?: string;
+  initialCode?: string;
+  initialFilename?: string;
+  initialLanguage?: AnalysisLanguage;
+}>();
 
 const editorRef = ref<InstanceType<typeof CodeEditor>>();
-const language = ref<AnalysisLanguage>("javascript");
-const filename = ref("example.js");
-const code = ref("const message = 'Hello, DevMate';\nconsole.log(message);");
+const language = ref<AnalysisLanguage>(props.initialLanguage ?? "javascript");
+const filename = ref(props.initialFilename ?? DEFAULT_PRESETS[language.value].filename);
+const code = ref(props.initialCode ?? DEFAULT_PRESETS[language.value].code);
 const analysis = ref<AnalysisResult>();
 const reportId = ref<string>();
 const reviewSummary = ref<ReviewSummaryType>();
@@ -42,6 +47,24 @@ const loading = ref(false);
 const summaryLoading = ref(false);
 const error = ref("");
 const summaryError = ref("");
+
+watch(
+  () => props.initialCode,
+  (newCode) => {
+    if (newCode !== undefined) {
+      code.value = newCode;
+      if (props.initialLanguage) {
+        language.value = props.initialLanguage;
+      }
+      if (props.initialFilename) {
+        filename.value = props.initialFilename;
+      }
+      analysis.value = undefined;
+      reportId.value = undefined;
+      error.value = "";
+    }
+  }
+);
 
 watch(language, (newLang, oldLang) => {
   const oldPreset = oldLang ? DEFAULT_PRESETS[oldLang] : undefined;

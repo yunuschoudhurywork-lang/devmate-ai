@@ -1,21 +1,127 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { ApiError, getDashboard } from "@/services/api";
-import type { DashboardData } from "@/types/analysis";
+import { detectLanguage, detectLanguageFromContent, getExtensionForLanguage } from "@/utils/languageDetector";
+import type { AnalysisLanguage, DashboardData } from "@/types/analysis";
 import type { ViewId } from "@/types/navigation";
 
-const emit = defineEmits<{ navigate: [view: ViewId] }>();
+const emit = defineEmits<{
+  navigate: [view: ViewId];
+  "analyze-code": [payload: { code: string; filename?: string; language?: AnalysisLanguage }];
+}>();
 
 const data = ref<DashboardData | null>(null);
 const loading = ref(true);
 const error = ref("");
+const fileInputRef = ref<HTMLInputElement | null>(null);
+const isDragging = ref(false);
 
 const maxTrend = computed(() => {
   const scores = data.value?.scoreTrend.map((point) => point.averageScore ?? 0) ?? [0];
   return Math.max(1, ...scores);
 });
 
+function processFile(file: File): void {
+  const MAX_SIZE = 2 * 1024 * 1024; // 2MB
+  if (file.size > MAX_SIZE) {
+    alert(`File "${file.name}" exceeds 2MB limit for browser analysis.`);
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = (e.target?.result as string) ?? "";
+    const language = detectLanguage(file.name, content);
+    emit("analyze-code", {
+      code: content,
+      filename: file.name,
+      language
+    });
+  };
+  reader.onerror = () => {
+    alert(`Failed to read "${file.name}".`);
+  };
+  reader.readAsText(file);
+}
+
+function triggerFilePicker(): void {
+  fileInputRef.value?.click();
+}
+
+function onFileInputChange(event: Event): void {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (file) {
+    processFile(file);
+  }
+  target.value = "";
+}
+
+function onDrop(event: DragEvent): void {
+  isDragging.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (file) {
+    processFile(file);
+    return;
+  }
+  const text = event.dataTransfer?.getData("text");
+  if (text && text.trim().length > 0) {
+    const lang = detectLanguageFromContent(text);
+    const ext = getExtensionForLanguage(lang);
+    emit("analyze-code", {
+      code: text,
+      filename: `dropped.${ext}`,
+      language: lang
+    });
+  }
+}
+
+async function handlePaste(): Promise<void> {
+  let text = "";
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.readText === "function") {
+      text = await navigator.clipboard.readText();
+    }
+  } catch (err) {
+    console.warn("Clipboard read was not allowed or failed:", err);
+  }
+
+  if (!text || text.trim().length === 0) {
+    const fallback = window.prompt("Paste your code here:");
+    if (fallback && fallback.trim().length > 0) {
+      text = fallback;
+    }
+  }
+
+  if (text && text.trim().length > 0) {
+    const language = detectLanguageFromContent(text);
+    const ext = getExtensionForLanguage(language);
+    emit("analyze-code", {
+      code: text,
+      filename: `pasted.${ext}`,
+      language
+    });
+  } else {
+    emit("navigate", "analyze");
+  }
+}
+
+function onWindowKeyDown(e: KeyboardEvent): void {
+  const target = e.target as HTMLElement | null;
+  const tag = target?.tagName?.toLowerCase();
+  if (tag === "input" || tag === "textarea" || target?.isContentEditable) return;
+
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "v") {
+    e.preventDefault();
+    void handlePaste();
+  } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "o") {
+    e.preventDefault();
+    triggerFilePicker();
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener("keydown", onWindowKeyDown);
   try {
     data.value = await getDashboard();
   } catch (caught) {
@@ -23,6 +129,10 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+});
+
+onUnmounted(() => {
+  window.removeEventListener("keydown", onWindowKeyDown);
 });
 
 function formatDate(value: string): string {
@@ -85,15 +195,39 @@ function scoreClass(score: number): string {
 
         <!-- Right Side: Big Sunshine Yellow Card from screenshot -->
         <div class="hero-right">
-          <div class="yellow-drop-card" @click="emit('navigate', 'analyze')">
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".js,.jsx,.ts,.tsx,.mjs,.cjs,.py,.pyw,.java,.txt,.json,.md"
+            class="hidden-file-input"
+            @change="onFileInputChange"
+          />
+
+          <div
+            class="yellow-drop-card"
+            :class="{ 'is-dragging': isDragging }"
+            @click="triggerFilePicker"
+            @dragover.prevent="isDragging = true"
+            @dragenter.prevent="isDragging = true"
+            @dragleave.prevent="isDragging = false"
+            @drop.prevent="onDrop"
+          >
             <div class="drop-top-row">
-              <div class="square-plus-btn">+</div>
+              <button
+                type="button"
+                class="square-plus-btn"
+                title="Choose a file to analyze"
+                aria-label="Upload file"
+                @click.stop="triggerFilePicker"
+              >
+                +
+              </button>
               <span class="universal-drop-tag">UNIVERSAL DROP</span>
             </div>
 
             <div class="drop-center">
               <h2 class="drop-title">DROP ANYTHING</h2>
-              <p class="drop-subtitle">We'll figure out what it is.</p>
+              <p class="drop-subtitle">{{ isDragging ? 'Release to upload and analyze!' : "We'll figure out what it is." }}</p>
 
               <div class="format-pills">
                 <span class="f-pill">JS</span>
@@ -107,10 +241,20 @@ function scoreClass(score: number): string {
             </div>
 
             <div class="drop-actions">
-              <button class="btn-drop-dark" @click.stop="emit('navigate', 'analyze')">
+              <button
+                type="button"
+                class="btn-drop-dark"
+                title="Select a local file from your computer"
+                @click.stop="triggerFilePicker"
+              >
                 Choose file
               </button>
-              <button class="btn-drop-white" @click.stop="emit('navigate', 'analyze')">
+              <button
+                type="button"
+                class="btn-drop-white"
+                title="Paste code from clipboard (Ctrl+V)"
+                @click.stop="handlePaste"
+              >
                 <span>📋 Paste</span>
                 <span class="mini-keycap">Ctrl</span>
                 <span class="mini-keycap">V</span>
@@ -1099,6 +1243,10 @@ function scoreClass(score: number): string {
   display: flex;
 }
 
+.hidden-file-input {
+  display: none;
+}
+
 .yellow-drop-card {
   width: 100%;
   background: #ffd738;
@@ -1111,13 +1259,21 @@ function scoreClass(score: number): string {
   justify-content: space-between;
   gap: 1.5rem;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
   color: #000000;
 }
 
 .yellow-drop-card:hover {
   transform: translateY(-2px);
   box-shadow: 8px 8px 0px #000000;
+}
+
+.yellow-drop-card.is-dragging {
+  border-style: dashed;
+  outline: 3px dashed #000000;
+  outline-offset: -6px;
+  background: #ffe373;
+  transform: scale(1.02);
 }
 
 .drop-top-row {
@@ -1138,6 +1294,13 @@ function scoreClass(score: number): string {
   font-weight: 900;
   line-height: 1;
   box-shadow: 2px 2px 0px #000000;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+
+.square-plus-btn:hover {
+  background: #f4f4f5;
+  transform: scale(1.08);
 }
 
 .universal-drop-tag {
