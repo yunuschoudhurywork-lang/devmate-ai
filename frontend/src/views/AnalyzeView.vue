@@ -3,6 +3,7 @@ import { onMounted, ref, watch } from "vue";
 import AnalysisSummary from "@/components/AnalysisSummary.vue";
 import CodeEditor from "@/components/CodeEditor.vue";
 import FindingsList from "@/components/FindingsList.vue";
+import FlowGraphViewer from "@/components/FlowGraphViewer.vue";
 import QualityScore from "@/components/QualityScore.vue";
 import ReviewSummary from "@/components/ReviewSummary.vue";
 import { analyzeCode, generateReviewSummary, getProjects, ApiError } from "@/services/api";
@@ -96,6 +97,15 @@ function onSelectLine(line: number): void {
   editorRef.value?.goToLine(line);
 }
 
+const activeWorkspaceTab = ref<"editor" | "flow">("editor");
+
+function onSelectFlowLine(line: number): void {
+  activeWorkspaceTab.value = "editor";
+  setTimeout(() => {
+    editorRef.value?.goToLine(line);
+  }, 50);
+}
+
 async function runAnalysis(): Promise<void> {
   loading.value = true;
   error.value = "";
@@ -173,11 +183,44 @@ async function requestReviewSummary(): Promise<void> {
         </button>
       </div>
 
+      <div class="workspace-mode-tabs">
+        <button
+          type="button"
+          class="mode-tab-btn"
+          :class="{ active: activeWorkspaceTab === 'editor' }"
+          @click="activeWorkspaceTab = 'editor'"
+        >
+          <span class="tab-icon">💻</span>
+          <span>Code Editor</span>
+        </button>
+        <button
+          type="button"
+          class="mode-tab-btn flow-tab"
+          :class="{ active: activeWorkspaceTab === 'flow' }"
+          @click="activeWorkspaceTab = 'flow'"
+        >
+          <span class="tab-icon">🗺️</span>
+          <span>Control Flow & Vulnerability Map</span>
+          <span v-if="(analysis?.findings?.length ?? 0) > 0" class="flow-tab-badge">
+            {{ analysis?.findings?.length }}
+          </span>
+        </button>
+      </div>
+
       <CodeEditor
+        v-show="activeWorkspaceTab === 'editor'"
         ref="editorRef"
         v-model="code"
         :language="language"
         :findings="analysis?.findings ?? []"
+      />
+
+      <FlowGraphViewer
+        v-if="activeWorkspaceTab === 'flow'"
+        :code="code"
+        :language="language"
+        :findings="analysis?.findings ?? []"
+        @select-line="onSelectFlowLine"
       />
 
       <p v-if="error" class="error" role="alert">{{ error }}</p>
@@ -348,6 +391,70 @@ input:focus, select:focus {
 .summary-button:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+.workspace-mode-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.85rem;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 0.3rem;
+  border-radius: 8px;
+  border: 1px solid rgba(103, 232, 249, 0.15);
+  width: fit-content;
+}
+
+.mode-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mode-tab-btn:hover {
+  color: #67e8f9;
+  background: rgba(103, 232, 249, 0.08);
+}
+
+.mode-tab-btn.active {
+  background: #0f172a;
+  color: #67e8f9;
+  border: 1px solid #67e8f9;
+  box-shadow: 0 0 10px rgba(103, 232, 249, 0.25);
+  font-weight: 700;
+}
+
+.flow-tab-badge {
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.05rem 0.4rem;
+  border-radius: 10px;
+}
+
+:global(body.light-theme) .workspace-mode-tabs {
+  background: #f4f0ea;
+  border: 2px solid #000000;
+}
+
+:global(body.light-theme) .mode-tab-btn {
+  color: #18181b;
+}
+
+:global(body.light-theme) .mode-tab-btn.active {
+  background: #000000;
+  color: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 960px) {
