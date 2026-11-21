@@ -274,8 +274,8 @@ async function requestReviewSummary(): Promise<void> {
   gap: 0.85rem;
   align-items: flex-end;
   margin-bottom: 0.85rem;
-  background: rgba(16, 11, 29, 0.7);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(2, 14, 8, 0.85);
+  border: 1px solid rgba(16, 182, 127, 0.25);
   border-radius: 12px;
   padding: 0.85rem 1rem;
   backdrop-filter: blur(14px);
@@ -283,15 +283,15 @@ async function requestReviewSummary(): Promise<void> {
 
 label {
   display: grid;
-  color: #a5b4fc;
+  color: #6ee7b7;
   font-size: 0.78rem;
   gap: 0.3rem;
   font-weight: 500;
 }
 
 input, select {
-  background: rgba(10, 7, 20, 0.85);
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  background: rgba(1, 10, 6, 0.9);
+  border: 1px solid rgba(16, 182, 127, 0.25);
   border-radius: 8px;
   color: #f8fafc;
   padding: 0.55rem 0.75rem;
@@ -301,29 +301,29 @@ input, select {
 }
 
 input:focus, select:focus {
-  border-color: #8b5cf6;
-  box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+  border-color: #10b67f;
+  box-shadow: 0 0 10px rgba(16, 182, 127, 0.35);
 }
 
 .btn-analyze {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-  border: 1px solid rgba(168, 85, 247, 0.5);
+  background: linear-gradient(135deg, #059669 0%, #10b67f 100%);
+  border: 1px solid rgba(16, 182, 127, 0.5);
   border-radius: 8px;
   color: white;
   cursor: pointer;
   font-weight: 600;
   font-size: 0.88rem;
   padding: 0.65rem 1.15rem;
-  box-shadow: 0 0 16px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 0 16px rgba(16, 182, 127, 0.4);
   transition: all 0.2s ease;
   margin-left: auto;
 }
 
 .btn-analyze:hover:not(:disabled) {
-  box-shadow: 0 0 24px rgba(168, 85, 247, 0.7);
+  box-shadow: 0 0 24px rgba(16, 182, 127, 0.7);
   transform: translateY(-1px);
 }
 
@@ -371,20 +371,20 @@ input:focus, select:focus {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #9333ea 0%, #6366f1 100%);
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: linear-gradient(135deg, #047857 0%, #10b67f 100%);
+  border: 1px solid rgba(16, 182, 127, 0.45);
   border-radius: 10px;
   color: white;
   font-weight: 600;
   font-size: 0.9rem;
   padding: 0.75rem 1rem;
   cursor: pointer;
-  box-shadow: 0 0 16px rgba(147, 51, 234, 0.35);
+  box-shadow: 0 0 16px rgba(16, 182, 127, 0.35);
   transition: all 0.2s ease;
 }
 
 .summary-button:hover:not(:disabled) {
-  box-shadow: 0 0 24px rgba(168, 85, 247, 0.65);
+  box-shadow: 0 0 24px rgba(16, 182, 127, 0.65);
   transform: translateY(-1px);
 }
 

@@ -174,8 +174,8 @@ onMounted(async () => {
 
 body {
   font-family: var(--font-body);
-  background: #06040b;
-  color: #f8fafc;
+  background: #010604;
+  color: #f0fdf4;
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
@@ -237,8 +237,8 @@ body.light-theme .top-right-btn:hover {
 
 /* Common Header Styles */
 .app-header {
-  background: rgba(10, 7, 18, 0.75);
-  border-bottom: 1px solid rgba(139, 92, 246, 0.15);
+  background: rgba(2, 10, 6, 0.82);
+  border-bottom: 1px solid rgba(16, 182, 127, 0.22);
   padding: 1.25rem 2.5rem;
   backdrop-filter: blur(16px);
   display: flex;
@@ -313,7 +313,8 @@ body.light-theme .top-right-btn:hover {
 
 .top-right-btn:hover {
   background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(16, 182, 127, 0.5);
+  box-shadow: 0 0 10px rgba(16, 182, 127, 0.25);
   transform: translateY(-1px);
 }
 
@@ -332,18 +333,20 @@ body.light-theme .top-right-btn:hover {
   place-content: center;
   gap: 0.75rem;
   text-align: center;
-  color: #a5b4fc;
-  background: #06040b;
+  color: #6ee7b7;
+  background: #010604;
 }
 .splash-mark {
-  color: #a855f7;
+  color: #10b67f;
   font-size: 2.5rem;
-  filter: drop-shadow(0 0 16px rgba(168, 85, 247, 0.7));
+  filter: drop-shadow(0 0 16px rgba(16, 182, 127, 0.7));
 }
 
 .auth-shell {
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% 20%, rgba(124, 58, 237, 0.22) 0%, #06040b 70%);
+  background:
+    radial-gradient(ellipse 110% 60% at 50% 50%, rgba(16, 182, 127, 0.28) 0%, rgba(8, 91, 64, 0.2) 45%, transparent 75%),
+    linear-gradient(180deg, #010504 0%, #031c12 25%, #085b40 45%, #0e8c62 50%, #085b40 55%, #031c12 75%, #010a07 100%);
 }
 
 body.light-theme .auth-shell {
@@ -353,7 +356,7 @@ body.light-theme .auth-shell {
 .app-container {
   display: flex;
   min-height: 100vh;
-  background: #06040b;
+  background: #010604;
 }
 
 .main-content {
@@ -362,9 +365,12 @@ body.light-theme .auth-shell {
   transition: margin-left 0.3s ease;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
-              radial-gradient(ellipse 90% 40% at 50% 115%, rgba(124, 58, 237, 0.2) 0%, transparent 60%),
-              #07040e;
+  /* Exact green and black gradient effect matching the screenshot:
+     Deep black (#010504) -> forest emerald (#085b40) -> radiant horizon glow (#0e8c62 / #10b67f) -> deep black (#010a07) */
+  background:
+    radial-gradient(ellipse 110% 55% at 50% 50%, rgba(16, 182, 127, 0.26) 0%, rgba(13, 146, 102, 0.15) 40%, transparent 75%),
+    linear-gradient(180deg, #010504 0%, #031c12 25%, #085b40 45%, #0e8c62 50%, #085b40 55%, #031c12 75%, #010a07 100%);
+  background-attachment: fixed;
   min-width: 0;
   min-height: 100vh;
 }

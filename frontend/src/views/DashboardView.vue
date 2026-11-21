@@ -515,8 +515,8 @@ function scoreClass(score: number): string {
 .loading-spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid rgba(139, 92, 246, 0.2);
-  border-top-color: #8b5cf6;
+  border: 3px solid rgba(16, 182, 127, 0.2);
+  border-top-color: #10b67f;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -527,8 +527,8 @@ function scoreClass(score: number): string {
 
 /* Pipeline Flow Banner */
 .pipeline-card {
-  background: rgba(16, 11, 29, 0.7);
-  border: 1px solid rgba(139, 92, 246, 0.22);
+  background: rgba(2, 14, 8, 0.78);
+  border: 1px solid rgba(16, 182, 127, 0.25);
   border-radius: 16px;
   padding: 1.25rem 1.5rem;
   backdrop-filter: blur(16px);
@@ -602,22 +602,22 @@ function scoreClass(score: number): string {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  background: rgba(10, 7, 20, 0.75);
-  border: 1px solid rgba(139, 92, 246, 0.16);
+  background: rgba(1, 10, 6, 0.75);
+  border: 1px solid rgba(16, 182, 127, 0.2);
   border-radius: 12px;
   padding: 0.75rem 0.9rem;
   transition: all 0.2s ease;
 }
 
 .flow-step:hover {
-  border-color: rgba(168, 85, 247, 0.4);
+  border-color: rgba(16, 182, 127, 0.45);
   transform: translateY(-1px);
 }
 
 .active-step {
-  background: rgba(20, 13, 38, 0.9);
-  border-color: #8b5cf6;
-  box-shadow: 0 0 16px rgba(139, 92, 246, 0.3), inset 0 0 12px rgba(124, 58, 237, 0.15);
+  background: rgba(4, 28, 17, 0.9);
+  border-color: #10b67f;
+  box-shadow: 0 0 16px rgba(16, 182, 127, 0.35), inset 0 0 12px rgba(16, 182, 127, 0.15);
 }
 
 .step-icon {
@@ -633,9 +633,9 @@ function scoreClass(score: number): string {
 }
 
 .active-icon {
-  background: linear-gradient(135deg, #7c3aed, #4f46e5);
-  border-color: #a855f7;
-  box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+  background: linear-gradient(135deg, #059669, #10b67f);
+  border-color: #34d399;
+  box-shadow: 0 0 10px rgba(16, 182, 127, 0.5);
 }
 
 .step-content {
@@ -689,8 +689,8 @@ function scoreClass(score: number): string {
 }
 
 .stat-card {
-  background: rgba(16, 11, 29, 0.7);
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: rgba(2, 14, 8, 0.78);
+  border: 1px solid rgba(16, 182, 127, 0.2);
   border-radius: 14px;
   padding: 1.25rem;
   display: grid;
@@ -701,13 +701,13 @@ function scoreClass(score: number): string {
 }
 
 .stat-card:hover {
-  border-color: rgba(168, 85, 247, 0.45);
+  border-color: rgba(16, 182, 127, 0.45);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(124, 58, 237, 0.15);
+  box-shadow: 0 8px 25px rgba(16, 182, 127, 0.2);
 }
 
 .stat-label {
-  color: #a5b4fc;
+  color: #6ee7b7;
   font-size: 0.76rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
