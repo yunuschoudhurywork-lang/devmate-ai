@@ -193,15 +193,15 @@ function handleSignOut(): void {
 
 <style scoped>
 /* ==========================================================================
-   Left Sidebar - Pure Blue & Cyan Theme (#0f172a & #67e8f9)
+   Left Sidebar - Green and Black Gradient Theme (#010504, #085b40, #10b67f)
    ========================================================================== */
 .sidebar {
   position: fixed;
   left: 0;
   top: 0;
   height: 100vh;
-  background: linear-gradient(180deg, #070c18 0%, #0a1324 50%, #0f172a 100%);
-  border-right: 1px solid rgba(103, 232, 249, 0.15);
+  background: linear-gradient(180deg, #010704 0%, #031c12 50%, #010a07 100%);
+  border-right: 1px solid rgba(16, 182, 127, 0.2);
   display: flex;
   flex-direction: column;
   width: 260px;
@@ -220,22 +220,22 @@ function handleSignOut(): void {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #0f172a 0%, #0284c7 100%);
-  border: 1.5px solid #67e8f9;
-  color: #67e8f9;
+  background: linear-gradient(135deg, #041f14 0%, #10b67f 100%);
+  border: 1.5px solid #10b67f;
+  color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10;
   font-weight: 700;
-  box-shadow: 0 0 10px rgba(103, 232, 249, 0.45);
+  box-shadow: 0 0 12px rgba(16, 182, 127, 0.45);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .toggle-btn:hover {
   transform: scale(1.12);
-  box-shadow: 0 0 14px rgba(103, 232, 249, 0.85);
+  box-shadow: 0 0 16px rgba(16, 182, 127, 0.85);
 }
 
 .toggle-icon {
@@ -265,8 +265,8 @@ function handleSignOut(): void {
 
 .brand-mark {
   font-size: 1.5rem;
-  color: #67e8f9;
-  filter: drop-shadow(0 0 8px rgba(103, 232, 249, 0.7));
+  color: #10b67f;
+  filter: drop-shadow(0 0 8px rgba(16, 182, 127, 0.75));
   flex-shrink: 0;
 }
 
@@ -300,15 +300,15 @@ function handleSignOut(): void {
   height: 40px;
   border-radius: 50%;
   flex-shrink: 0;
-  border: 2px solid #0284c7;
-  background: rgba(14, 165, 233, 0.18);
-  color: #67e8f9;
+  border: 2px solid #10b67f;
+  background: rgba(16, 182, 127, 0.16);
+  color: #6ee7b7;
   display: grid;
   place-items: center;
   font-weight: 700;
   font-size: 0.85rem;
   overflow: hidden;
-  box-shadow: 0 0 10px rgba(14, 165, 233, 0.35);
+  box-shadow: 0 0 10px rgba(16, 182, 127, 0.35);
 }
 
 .user-avatar img {
@@ -344,18 +344,18 @@ function handleSignOut(): void {
 .btn-sign-out {
   margin-top: 0.45rem;
   padding: 0.35rem 0.7rem;
-  background: rgba(15, 23, 42, 0.7);
-  border: 1px solid rgba(103, 232, 249, 0.3);
+  background: rgba(4, 31, 20, 0.7);
+  border: 1px solid rgba(16, 182, 127, 0.3);
   border-radius: 6px;
-  color: #67e8f9;
+  color: #6ee7b7;
   font-size: 0.72rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .btn-sign-out:hover {
-  background: rgba(103, 232, 249, 0.15);
-  border-color: #67e8f9;
+  background: rgba(16, 182, 127, 0.2);
+  border-color: #10b67f;
   color: #ffffff;
 }
 
@@ -398,18 +398,18 @@ function handleSignOut(): void {
 }
 
 .nav-item:hover {
-  background: rgba(15, 23, 42, 0.85);
-  color: #67e8f9;
-  border-color: rgba(103, 232, 249, 0.25);
+  background: rgba(8, 91, 64, 0.28);
+  color: #6ee7b7;
+  border-color: rgba(16, 182, 127, 0.3);
 }
 
-/* Selected / Active State: Signature #0f172a & #67e8f9 combination */
+/* Selected / Active State: Signature Emerald & Black (#042417 & #10b67f) */
 .nav-item.active {
-  background: #0f172a;
-  color: #67e8f9;
-  border: 1.5px solid #67e8f9;
+  background: #042417;
+  color: #10b67f;
+  border: 1.5px solid #10b67f;
   font-weight: 700;
-  box-shadow: 0 0 16px rgba(103, 232, 249, 0.35), inset 0 0 10px rgba(103, 232, 249, 0.12);
+  box-shadow: 0 0 16px rgba(16, 182, 127, 0.4), inset 0 0 10px rgba(16, 182, 127, 0.15);
 }
 
 .nav-icon {
@@ -431,12 +431,12 @@ function handleSignOut(): void {
 
 .nav-item:hover .nav-icon {
   transform: scale(1.08);
-  color: #67e8f9;
+  color: #6ee7b7;
 }
 
 .nav-item.active .nav-icon {
-  color: #67e8f9;
-  filter: drop-shadow(0 0 6px rgba(103, 232, 249, 0.65));
+  color: #10b67f;
+  filter: drop-shadow(0 0 6px rgba(16, 182, 127, 0.75));
 }
 
 .nav-label {
@@ -446,13 +446,13 @@ function handleSignOut(): void {
 }
 
 .nav-item.active .nav-label {
-  color: #67e8f9;
+  color: #10b67f;
   font-weight: 700;
 }
 
 .sidebar-footer {
   padding: 1rem 1.25rem 0;
-  border-top: 1px solid rgba(103, 232, 249, 0.15);
+  border-top: 1px solid rgba(16, 182, 127, 0.2);
   margin-top: auto;
 }
 

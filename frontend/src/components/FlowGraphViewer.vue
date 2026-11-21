@@ -178,7 +178,7 @@ function getEdgePath(edge: { from: string; to: string }): string {
               markerHeight="6"
               orient="auto-start-reverse"
             >
-              <path d="M 0 1 L 10 5 L 0 9 z" fill="#67e8f9" />
+              <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b67f" />
             </marker>
 
             <!-- Vulnerable Arrowhead -->
@@ -327,8 +327,8 @@ function getEdgePath(edge: { from: string; to: string }): string {
 .flow-graph-container {
   display: flex;
   flex-direction: column;
-  background: #090e1a;
-  border: 1.5px solid rgba(103, 232, 249, 0.2);
+  background: #010704;
+  border: 1.5px solid rgba(16, 182, 127, 0.25);
   border-radius: 12px;
   overflow: hidden;
   height: 620px;
@@ -341,8 +341,8 @@ function getEdgePath(edge: { from: string; to: string }): string {
   justify-content: space-between;
   align-items: center;
   padding: 0.85rem 1.25rem;
-  background: #0f172a;
-  border-bottom: 1.5px solid rgba(103, 232, 249, 0.15);
+  background: #02120a;
+  border-bottom: 1.5px solid rgba(16, 182, 127, 0.2);
   gap: 1rem;
   flex-wrap: wrap;
 }
@@ -358,8 +358,8 @@ function getEdgePath(edge: { from: string; to: string }): string {
   align-items: center;
   gap: 0.45rem;
   padding: 0.35rem 0.75rem;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(103, 232, 249, 0.25);
+  background: rgba(4, 28, 17, 0.85);
+  border: 1px solid rgba(16, 182, 127, 0.3);
   border-radius: 20px;
   font-size: 0.78rem;
   color: #94a3b8;
@@ -392,7 +392,7 @@ function getEdgePath(edge: { from: string; to: string }): string {
   border-radius: 50%;
 }
 
-.pill-dot.blue { background: #67e8f9; }
+.pill-dot.blue { background: #10b67f; }
 .pill-dot.red { background: #ef4444; }
 .pill-dot.green { background: #10b981; }
 
@@ -414,10 +414,10 @@ function getEdgePath(edge: { from: string; to: string }): string {
 
 .btn-filter {
   padding: 0.4rem 0.85rem;
-  background: #090e1a;
-  border: 1px solid rgba(103, 232, 249, 0.3);
+  background: #010a06;
+  border: 1px solid rgba(16, 182, 127, 0.3);
   border-radius: 6px;
-  color: #67e8f9;
+  color: #10b67f;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
@@ -425,8 +425,8 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .btn-filter:hover {
-  background: rgba(103, 232, 249, 0.15);
-  border-color: #67e8f9;
+  background: rgba(16, 182, 127, 0.15);
+  border-color: #10b67f;
 }
 
 .btn-filter.active {
@@ -437,14 +437,14 @@ function getEdgePath(edge: { from: string; to: string }): string {
 
 .zoom-group {
   display: inline-flex;
-  border: 1px solid rgba(103, 232, 249, 0.25);
+  border: 1px solid rgba(16, 182, 127, 0.3);
   border-radius: 6px;
   overflow: hidden;
 }
 
 .btn-tool {
-  background: #090e1a;
-  color: #94a3b8;
+  background: #010a06;
+  color: #6ee7b7;
   border: none;
   padding: 0.35rem 0.65rem;
   font-size: 0.82rem;
@@ -454,8 +454,8 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .btn-tool:hover {
-  background: #1e293b;
-  color: #67e8f9;
+  background: #042417;
+  color: #10b67f;
 }
 
 .btn-tool.zoom-label {
@@ -471,7 +471,7 @@ function getEdgePath(edge: { from: string; to: string }): string {
   padding: 1.5rem;
   display: flex;
   justify-content: center;
-  background: radial-gradient(circle at 50% 20%, rgba(15, 23, 42, 0.8) 0%, #070b14 100%);
+  background: radial-gradient(circle at 50% 30%, rgba(8, 91, 64, 0.35) 0%, #010604 100%);
   user-select: none;
 }
 
@@ -486,7 +486,7 @@ function getEdgePath(edge: { from: string; to: string }): string {
 /* Edges */
 .flow-edge {
   fill: none;
-  stroke: #38bdf8;
+  stroke: #10b67f;
   stroke-width: 2.2px;
   stroke-linecap: round;
   transition: all 0.2s;
@@ -516,23 +516,23 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .node-box {
-  fill: #0f172a;
-  stroke: #38bdf8;
+  fill: #031c12;
+  stroke: #10b67f;
   stroke-width: 1.5px;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
   transition: all 0.2s;
 }
 
 .node-group:hover .node-box {
-  stroke: #67e8f9;
+  stroke: #34d399;
   stroke-width: 2px;
-  filter: drop-shadow(0 0 14px rgba(103, 232, 249, 0.3));
+  filter: drop-shadow(0 0 14px rgba(16, 182, 127, 0.45));
 }
 
 .node-group.is-selected .node-box {
-  stroke: #67e8f9;
+  stroke: #10b67f;
   stroke-width: 2.5px;
-  filter: drop-shadow(0 0 16px rgba(103, 232, 249, 0.5));
+  filter: drop-shadow(0 0 16px rgba(16, 182, 127, 0.65));
 }
 
 .node-group.is-vulnerable .node-box {
@@ -571,13 +571,13 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .line-pill-bg {
-  fill: #1e293b;
-  stroke: rgba(103, 232, 249, 0.25);
+  fill: #010d07;
+  stroke: rgba(16, 182, 127, 0.3);
   stroke-width: 1px;
 }
 
 .line-pill-text {
-  fill: #67e8f9;
+  fill: #10b67f;
   font-size: 10px;
   font-weight: 800;
   text-anchor: middle;
@@ -606,12 +606,12 @@ function getEdgePath(edge: { from: string; to: string }): string {
 
 /* Inspector Bottom Panel */
 .node-inspector {
-  background: #0a1120;
-  border-top: 1.5px solid rgba(103, 232, 249, 0.2);
+  background: #02140c;
+  border-top: 1.5px solid rgba(16, 182, 127, 0.25);
   padding: 0.85rem 1.25rem;
   max-height: 180px;
   overflow-y: auto;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .inspector-header {
@@ -630,9 +630,9 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .inspector-line {
-  background: #1e293b;
-  color: #67e8f9;
-  border: 1px solid rgba(103, 232, 249, 0.3);
+  background: #010d07;
+  color: #10b67f;
+  border: 1px solid rgba(16, 182, 127, 0.35);
   padding: 0.1rem 0.45rem;
   border-radius: 4px;
   font-size: 0.72rem;
@@ -640,9 +640,9 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .btn-jump-editor {
-  background: #0f172a;
-  color: #67e8f9;
-  border: 1.5px solid #67e8f9;
+  background: #042417;
+  color: #10b67f;
+  border: 1.5px solid #10b67f;
   padding: 0.35rem 0.85rem;
   border-radius: 6px;
   font-weight: 700;
@@ -652,8 +652,8 @@ function getEdgePath(edge: { from: string; to: string }): string {
 }
 
 .btn-jump-editor:hover {
-  background: rgba(103, 232, 249, 0.15);
-  box-shadow: 0 0 10px rgba(103, 232, 249, 0.4);
+  background: rgba(16, 182, 127, 0.2);
+  box-shadow: 0 0 10px rgba(16, 182, 127, 0.4);
 }
 
 .code-preview code {

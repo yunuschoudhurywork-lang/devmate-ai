@@ -229,12 +229,12 @@ function switchMode(next: "login" | "signup"): void {
 
 .auth-card {
   width: min(460px, 100%);
-  background: rgba(14, 10, 26, 0.88);
-  border: 1px solid rgba(139, 92, 246, 0.28);
+  background: rgba(2, 14, 8, 0.88);
+  border: 1px solid rgba(16, 182, 127, 0.3);
   border-radius: 18px;
   padding: 2.25rem 2rem;
   backdrop-filter: blur(16px);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.65), 0 0 32px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.75), 0 0 32px rgba(16, 182, 127, 0.16);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -256,9 +256,9 @@ function switchMode(next: "login" | "signup"): void {
 }
 
 .brand-spark {
-  color: #a855f7;
+  color: #10b67f;
   font-size: 1.4rem;
-  filter: drop-shadow(0 0 10px rgba(168, 85, 247, 0.8));
+  filter: drop-shadow(0 0 10px rgba(16, 182, 127, 0.8));
 }
 
 .brand-title {
@@ -269,7 +269,7 @@ function switchMode(next: "login" | "signup"): void {
 }
 
 .brand-title strong {
-  color: #a855f7;
+  color: #10b67f;
 }
 
 .theme-toggle-btn {
@@ -357,9 +357,9 @@ function switchMode(next: "login" | "signup"): void {
 }
 
 .tab-btn.active {
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #059669 0%, #10b67f 100%);
   color: #ffffff;
-  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 4px 14px rgba(16, 182, 127, 0.4);
 }
 
 /* Form */
@@ -467,20 +467,20 @@ function switchMode(next: "login" | "signup"): void {
   width: 100%;
   padding: 0.8rem;
   border-radius: 9px;
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
-  border: 1px solid rgba(168, 85, 247, 0.4);
+  background: linear-gradient(135deg, #059669 0%, #10b67f 100%);
+  border: 1px solid rgba(16, 182, 127, 0.4);
   color: #ffffff;
   font-size: 0.94rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 18px rgba(124, 58, 237, 0.45);
+  box-shadow: 0 4px 18px rgba(16, 182, 127, 0.45);
   margin-top: 0.2rem;
 }
 
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(124, 58, 237, 0.65);
+  box-shadow: 0 6px 24px rgba(16, 182, 127, 0.65);
 }
 
 .btn-submit:disabled {
