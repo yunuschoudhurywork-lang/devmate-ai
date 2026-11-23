@@ -38,6 +38,8 @@ export interface AnalysisResult {
   };
 }
 
+export type QualityScore = AnalysisResult["quality"];
+
 export interface AnalyzeSuccessResponse {
   success: true;
   analysis: AnalysisResult;
