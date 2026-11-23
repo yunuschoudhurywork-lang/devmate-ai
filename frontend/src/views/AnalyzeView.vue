@@ -6,6 +6,7 @@ import FindingsList from "@/components/FindingsList.vue";
 import FlowGraphViewer from "@/components/FlowGraphViewer.vue";
 import QualityScore from "@/components/QualityScore.vue";
 import ReviewSummary from "@/components/ReviewSummary.vue";
+import { useLiveScan } from "@/composables/useLiveScan";
 import { analyzeCode, generateReviewSummary, getProjects, ApiError } from "@/services/api";
 import type { AnalysisLanguage, AnalysisResult, Project, ReviewSummary as ReviewSummaryType } from "@/types/analysis";
 
@@ -49,6 +50,33 @@ const summaryLoading = ref(false);
 const error = ref("");
 const summaryError = ref("");
 
+const {
+  isLiveScanEnabled,
+  scanStatus,
+  scanDurationMs,
+  toggleLiveScan,
+  scheduleScan,
+  runImmediateScan
+} = useLiveScan(400);
+
+function onToggleLiveScan(): void {
+  const enabled = toggleLiveScan();
+  if (enabled && code.value.trim().length > 0) {
+    runImmediateScan(code.value, language.value, filename.value, (liveResult) => {
+      analysis.value = liveResult;
+    });
+  }
+}
+
+watch(code, (newCode) => {
+  if (isLiveScanEnabled.value && newCode.trim().length > 0) {
+    scheduleScan(newCode, language.value, filename.value, (liveResult) => {
+      analysis.value = liveResult;
+      reportId.value = undefined;
+    });
+  }
+});
+
 watch(
   () => props.initialCode,
   (newCode) => {
@@ -76,6 +104,12 @@ watch(language, (newLang, oldLang) => {
   if (!code.value.trim() || (oldPreset && code.value.trim() === oldPreset.code.trim())) {
     code.value = newPreset.code;
   }
+  if (isLiveScanEnabled.value && code.value.trim().length > 0) {
+    scheduleScan(code.value, newLang, filename.value, (liveResult) => {
+      analysis.value = liveResult;
+      reportId.value = undefined;
+    });
+  }
 });
 
 watch(
@@ -90,6 +124,12 @@ onMounted(async () => {
     projects.value = await getProjects();
   } catch {
     projects.value = [];
+  }
+
+  if (isLiveScanEnabled.value && code.value.trim().length > 0 && !analysis.value) {
+    runImmediateScan(code.value, language.value, filename.value, (liveResult) => {
+      analysis.value = liveResult;
+    });
   }
 });
 
@@ -177,6 +217,27 @@ async function requestReviewSummary(): Promise<void> {
             <option v-for="project in projects" :key="project.id" :value="project.id">{{ project.name }}</option>
           </select>
         </label>
+        <div class="live-scan-wrapper">
+          <button
+            type="button"
+            class="btn-live-toggle"
+            :class="{ active: isLiveScanEnabled }"
+            :title="isLiveScanEnabled ? 'Live Scan active: analyzes code in background as you type' : 'Click to enable real-time Live Scan'"
+            @click="onToggleLiveScan"
+          >
+            <span class="live-pulse-dot" :class="{ pulsing: scanStatus === 'debouncing' || scanStatus === 'scanning' }"></span>
+            <span class="live-text">Live Scan</span>
+            <span class="live-switch-pill">{{ isLiveScanEnabled ? 'ON' : 'OFF' }}</span>
+          </button>
+          <div v-if="isLiveScanEnabled" class="live-status-chip" :class="scanStatus">
+            <span v-if="scanStatus === 'debouncing'">⚡ Typing…</span>
+            <span v-else-if="scanStatus === 'scanning'">🔄 Scanning…</span>
+            <span v-else-if="scanStatus === 'ready'">
+              ✓ {{ (analysis?.findings?.length ?? 0) === 0 ? 'Clean' : `${analysis?.findings?.length} issue${(analysis?.findings?.length ?? 0) > 1 ? 's' : ''}` }} ({{ scanDurationMs }}ms)
+            </span>
+            <span v-else>🟢 Ready</span>
+          </div>
+        </div>
         <button class="btn-analyze" :disabled="loading" @click="runAnalysis">
           <span class="btn-icon">⚡</span>
           <span>{{ loading ? "Analyzing…" : "Analyze code" }}</span>
@@ -303,6 +364,102 @@ input, select {
 input:focus, select:focus {
   border-color: #10b67f;
   box-shadow: 0 0 10px rgba(16, 182, 127, 0.35);
+}
+
+.live-scan-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-left: 0.3rem;
+}
+
+.btn-live-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: rgba(1, 10, 6, 0.95);
+  border: 1px solid rgba(16, 182, 127, 0.35);
+  border-radius: 8px;
+  color: #94a3b8;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-live-toggle:hover {
+  border-color: #10b67f;
+  color: #f0fdf4;
+}
+
+.btn-live-toggle.active {
+  background: rgba(4, 36, 23, 0.9);
+  border-color: #10b67f;
+  color: #f0fdf4;
+  box-shadow: 0 0 12px rgba(16, 182, 127, 0.25);
+}
+
+.live-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #64748b;
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+.btn-live-toggle.active .live-pulse-dot {
+  background: #10b67f;
+  box-shadow: 0 0 8px #10b67f;
+}
+
+.live-pulse-dot.pulsing {
+  animation: pulse-glow 1s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.3); opacity: 1; }
+}
+
+.live-switch-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.btn-live-toggle.active .live-switch-pill {
+  background: #059669;
+  color: #ffffff;
+}
+
+.live-status-chip {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #6ee7b7;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.6rem;
+  background: rgba(16, 182, 127, 0.1);
+  border: 1px solid rgba(16, 182, 127, 0.25);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.live-status-chip.debouncing {
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.live-status-chip.scanning {
+  color: #67e8f9;
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.3);
 }
 
 .btn-analyze {
@@ -455,6 +612,27 @@ input:focus, select:focus {
   color: #ffffff;
   border: 2px solid #000000;
   box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.3);
+}
+
+:global(body.light-theme) .btn-live-toggle {
+  background: #ffffff;
+  border: 2px solid #000000;
+  color: #000000;
+}
+
+:global(body.light-theme) .btn-live-toggle.active {
+  background: #000000;
+  color: #ffffff;
+}
+
+:global(body.light-theme) .btn-live-toggle.active .live-pulse-dot {
+  background: #22c55e;
+}
+
+:global(body.light-theme) .live-status-chip {
+  background: #ffffff;
+  border: 1px solid #000000;
+  color: #000000;
 }
 
 @media (max-width: 960px) {
